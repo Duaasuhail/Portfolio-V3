@@ -103,12 +103,12 @@ interface Star {
   points?: number;
 }
 
-/** Max distance (in canvas px) to link two placed stars into a constellation */
-const CONSTELLATION_RADIUS = 42;
-/** Max links per star so constellations stay readable */
-const CONSTELLATION_MAX_EDGES = 4;
+/** Click within this of an existing star snaps to it (join / close / continue) */
+const STAR_SNAP_PX = 14;
 /** How close a click must be to an existing line to snap onto it */
-const LINE_HIT_PX = 11;
+const LINE_HIT_PX = 10;
+/** Soft distance used only for line opacity falloff */
+const LINE_FADE_PX = 220;
 
 interface ShootingStar {
   x: number;
@@ -948,21 +948,24 @@ function drawStarGlyph(
       : 0.72 + Math.min(0.4, star.opacity * 0.5);
   const spin = star.twinklePhase * 0.08;
 
-  // Soft glow halo
-  const glowR = base * (isPlaced ? 3.4 : isHero ? 2.4 : 2.0);
+  // Hard shine — tight hot core that drops off fast (less soft bloom)
+  const glowR = base * (isPlaced ? 2.4 : isHero ? 1.9 : 1.55);
   const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
   if (isPlaced) {
-    glow.addColorStop(0, `rgba(235, 245, 255,${alpha * 0.72})`);
-    glow.addColorStop(0.25, `rgba(190, 220, 255,${alpha * 0.32})`);
-    glow.addColorStop(0.55, `rgba(150, 195, 255,${alpha * 0.12})`);
+    glow.addColorStop(0, `rgba(255, 255, 255,${alpha * 0.95})`);
+    glow.addColorStop(0.12, `rgba(245, 250, 255,${alpha * 0.55})`);
+    glow.addColorStop(0.32, `rgba(200, 225, 255,${alpha * 0.14})`);
+    glow.addColorStop(0.55, `rgba(160, 200, 255,${alpha * 0.04})`);
     glow.addColorStop(1, "rgba(150, 195, 255, 0)");
   } else if (isHero) {
-    glow.addColorStop(0, `rgba(255, 245, 250,${alpha * 0.5})`);
-    glow.addColorStop(0.35, `rgba(200, 180, 255,${alpha * 0.16})`);
+    glow.addColorStop(0, `rgba(255, 255, 255,${alpha * 0.75})`);
+    glow.addColorStop(0.15, `rgba(255, 245, 250,${alpha * 0.35})`);
+    glow.addColorStop(0.4, `rgba(200, 180, 255,${alpha * 0.08})`);
     glow.addColorStop(1, "rgba(120, 150, 255, 0)");
   } else {
-    glow.addColorStop(0, `rgba(235, 242, 255,${alpha * 0.58})`);
-    glow.addColorStop(0.4, `rgba(195, 220, 255,${alpha * 0.2})`);
+    glow.addColorStop(0, `rgba(255, 255, 255,${alpha * 0.85})`);
+    glow.addColorStop(0.14, `rgba(240, 248, 255,${alpha * 0.4})`);
+    glow.addColorStop(0.4, `rgba(195, 220, 255,${alpha * 0.08})`);
     glow.addColorStop(1, "rgba(180, 210, 255, 0)");
   }
   ctx.fillStyle = glow;
@@ -970,13 +973,14 @@ function drawStarGlyph(
   ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
   ctx.fill();
 
-  // Diffraction flares — stronger on placed / hero
+  // Diffraction spikes — long, thin, bright (classic star “shine”)
   if (isPlaced || isHero || alpha > 0.22) {
-    const flareLen = base * (isPlaced ? 2.8 : isHero ? 2.0 : 1.55);
-    const flareAlpha = alpha * (isPlaced ? 0.65 : isHero ? 0.4 : 0.28);
+    const flareLen = base * (isPlaced ? 3.8 : isHero ? 2.8 : 2.2);
+    const flareAlpha = alpha * (isPlaced ? 0.9 : isHero ? 0.55 : 0.42);
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(spin * 0.5);
+    ctx.lineCap = "round";
     for (let i = 0; i < 4; i++) {
       const a = (i * Math.PI) / 2;
       const gradient = ctx.createLinearGradient(
@@ -986,10 +990,12 @@ function drawStarGlyph(
         Math.sin(a) * flareLen,
       );
       gradient.addColorStop(0, "rgba(255,255,255,0)");
-      gradient.addColorStop(0.5, `rgba(230, 240, 255,${flareAlpha})`);
+      gradient.addColorStop(0.42, `rgba(230, 240, 255,${flareAlpha * 0.25})`);
+      gradient.addColorStop(0.5, `rgba(255, 255, 255,${flareAlpha})`);
+      gradient.addColorStop(0.58, `rgba(230, 240, 255,${flareAlpha * 0.25})`);
       gradient.addColorStop(1, "rgba(255,255,255,0)");
       ctx.strokeStyle = gradient;
-      ctx.lineWidth = isPlaced ? 0.85 : 0.3;
+      ctx.lineWidth = isPlaced ? 0.55 : 0.22;
       ctx.beginPath();
       ctx.moveTo(Math.cos(a) * -flareLen, Math.sin(a) * -flareLen);
       ctx.lineTo(Math.cos(a) * flareLen, Math.sin(a) * flareLen);
@@ -998,7 +1004,7 @@ function drawStarGlyph(
     if (isPlaced || isHero) {
       for (let i = 0; i < 4; i++) {
         const a = Math.PI / 4 + (i * Math.PI) / 2;
-        const len = flareLen * 0.65;
+        const len = flareLen * 0.55;
         const gradient = ctx.createLinearGradient(
           Math.cos(a) * -len,
           Math.sin(a) * -len,
@@ -1006,10 +1012,10 @@ function drawStarGlyph(
           Math.sin(a) * len,
         );
         gradient.addColorStop(0, "rgba(255,255,255,0)");
-        gradient.addColorStop(0.5, `rgba(200, 225, 255,${flareAlpha * 0.45})`);
+        gradient.addColorStop(0.5, `rgba(220, 235, 255,${flareAlpha * 0.5})`);
         gradient.addColorStop(1, "rgba(255,255,255,0)");
         ctx.strokeStyle = gradient;
-        ctx.lineWidth = isPlaced ? 0.45 : 0.25;
+        ctx.lineWidth = isPlaced ? 0.3 : 0.18;
         ctx.beginPath();
         ctx.moveTo(Math.cos(a) * -len, Math.sin(a) * -len);
         ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
@@ -1019,15 +1025,15 @@ function drawStarGlyph(
     ctx.restore();
   }
 
-  // Pointed star body — 4 / 5 / 6 points
+  // Pointed star body — sharper tips (smaller inner radius)
   drawStarShape(
     ctx,
     cx,
     cy,
     spikes,
     base,
-    base * 0.36,
-    alpha * (isPlaced ? 0.85 : 0.88),
+    base * 0.22,
+    alpha * (isPlaced ? 0.95 : 0.92),
     spin,
   );
 
@@ -1037,55 +1043,26 @@ function drawStarGlyph(
       cx,
       cy,
       spikes,
-      base * 0.62,
-      base * 0.22,
-      alpha * 0.7,
+      base * 0.55,
+      base * 0.14,
+      alpha * 0.75,
       spin + Math.PI / spikes,
     );
   }
 
-  // Hot white core
-  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, base * 0.35);
-  core.addColorStop(0, `rgba(255,255,255,${Math.min(1, alpha * 1.05)})`);
-  core.addColorStop(0.55, `rgba(230, 240, 255,${alpha * 0.55})`);
+  // Pinpoint hot core — harsh white center
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, base * 0.28);
+  core.addColorStop(0, `rgba(255,255,255,${Math.min(1, alpha * 1.15)})`);
+  core.addColorStop(0.35, `rgba(255, 252, 255,${alpha * 0.7})`);
+  core.addColorStop(0.7, `rgba(230, 240, 255,${alpha * 0.2})`);
   core.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = core;
   ctx.beginPath();
-  ctx.arc(cx, cy, base * 0.32, 0, Math.PI * 2);
+  ctx.arc(cx, cy, base * 0.26, 0, Math.PI * 2);
   ctx.fill();
 }
 
 /** Candidate nearest-neighbor edges within constellation radius (same shape only) */
-function collectCandidateEdges(placed: Star[]) {
-  const candidates: { i: number; j: number; d: number }[] = [];
-  const seen = new Set<string>();
-
-  for (let i = 0; i < placed.length; i++) {
-    const a = placed[i];
-    const neighbors = placed
-      .map((b, j) => ({
-        j,
-        d: Math.hypot(a.x - b.x, a.y - b.y),
-      }))
-      .filter(({ j, d }) => {
-        if (j === i || d <= 0.5 || d > CONSTELLATION_RADIUS) return false;
-        // Auto-links stay inside one shape; cross-shape uses forced links
-        return (a.shapeId ?? -1) === (placed[j].shapeId ?? -2);
-      })
-      .sort((p, q) => p.d - q.d)
-      .slice(0, CONSTELLATION_MAX_EDGES);
-
-    for (const { j, d } of neighbors) {
-      const key = i < j ? `${i}-${j}` : `${j}-${i}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      candidates.push({ i, j, d });
-    }
-  }
-
-  return candidates;
-}
-
 function pointToSegment(
   px: number,
   py: number,
@@ -1107,18 +1084,6 @@ function pointToSegment(
   const x = ax + t * abx;
   const y = ay + t * aby;
   return { d: Math.hypot(px - x, py - y), t, x, y };
-}
-
-/** True if another star sits on the segment between i and j */
-function starSplitsEdge(placed: Star[], i: number, j: number) {
-  const a = placed[i];
-  const b = placed[j];
-  for (let k = 0; k < placed.length; k++) {
-    if (k === i || k === j) continue;
-    const hit = pointToSegment(placed[k].x, placed[k].y, a.x, a.y, b.x, b.y);
-    if (hit.t > 0.08 && hit.t < 0.92 && hit.d <= LINE_HIT_PX) return true;
-  }
-  return false;
 }
 
 function collectForcedEdges(placed: Star[]) {
@@ -1159,29 +1124,11 @@ function findLineUnderPoint(
 ): { i: number; j: number; x: number; y: number; d: number } | null {
   if (placed.length < 2) return null;
 
-  // Prefer currently drawn edges; fall back to nearby pairs
   const edges = buildConstellationEdges(placed);
-  const pool =
-    edges.length > 0
-      ? edges
-      : (() => {
-          const pairs: { i: number; j: number; d: number }[] = [];
-          for (let i = 0; i < placed.length; i++) {
-            for (let j = i + 1; j < placed.length; j++) {
-              const d = Math.hypot(
-                placed[i].x - placed[j].x,
-                placed[i].y - placed[j].y,
-              );
-              if (d <= CONSTELLATION_RADIUS * 1.5) pairs.push({ i, j, d });
-            }
-          }
-          return pairs;
-        })();
-
   let best: { i: number; j: number; x: number; y: number; d: number } | null =
     null;
 
-  for (const edge of pool) {
+  for (const edge of edges) {
     const a = placed[edge.i];
     const b = placed[edge.j];
     const hit = pointToSegment(x, y, a.x, a.y, b.x, b.y);
@@ -1196,161 +1143,32 @@ function findLineUnderPoint(
   return best;
 }
 
-function convexHullIndices(points: { x: number; y: number }[]): number[] {
-  const n = points.length;
-  if (n < 3) return Array.from({ length: n }, (_, i) => i);
-
-  const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => {
-    const dx = points[a].x - points[b].x;
-    if (Math.abs(dx) > 1e-6) return dx;
-    return points[a].y - points[b].y;
-  });
-
-  const cross = (o: number, a: number, b: number) => {
-    const ox = points[o].x;
-    const oy = points[o].y;
-    return (
-      (points[a].x - ox) * (points[b].y - oy) -
-      (points[a].y - oy) * (points[b].x - ox)
-    );
-  };
-
-  const lower: number[] = [];
-  for (const i of order) {
-    while (
-      lower.length >= 2 &&
-      cross(lower[lower.length - 2], lower[lower.length - 1], i) <= 0
-    ) {
-      lower.pop();
+function findNearestStar(
+  placed: Star[],
+  x: number,
+  y: number,
+  maxDist: number,
+  exclude?: Star | null,
+): Star | null {
+  let best: Star | null = null;
+  let bestD = maxDist;
+  for (const p of placed) {
+    if (exclude && p === exclude) continue;
+    const d = Math.hypot(x - p.x, y - p.y);
+    if (d < bestD) {
+      bestD = d;
+      best = p;
     }
-    lower.push(i);
   }
-
-  const upper: number[] = [];
-  for (let k = order.length - 1; k >= 0; k--) {
-    const i = order[k];
-    while (
-      upper.length >= 2 &&
-      cross(upper[upper.length - 2], upper[upper.length - 1], i) <= 0
-    ) {
-      upper.pop();
-    }
-    upper.push(i);
-  }
-
-  lower.pop();
-  upper.pop();
-  return lower.concat(upper);
+  return best;
 }
 
 /**
- * Keep stars linked within each shape. Forced junction links connect
- * separate shapes together. Drop hull diagonals and edges that a
- * mid-line star has already split.
+ * Constellation lines are exactly the connections the user drew —
+ * like Illustrator pen-tool segments.
  */
 function buildConstellationEdges(placed: Star[]) {
-  const auto = collectCandidateEdges(placed);
-  const forced = collectForcedEdges(placed);
-  const raw = [...auto, ...forced].filter(
-    (e) => !starSplitsEdge(placed, e.i, e.j),
-  );
-
-  if (raw.length === 0) return [];
-
-  const kept: { i: number; j: number; d: number }[] = [];
-  const keptKeys = new Set<string>();
-
-  const pushEdge = (edge: { i: number; j: number; d: number }) => {
-    const key = edge.i < edge.j ? `${edge.i}-${edge.j}` : `${edge.j}-${edge.i}`;
-    if (keptKeys.has(key)) return;
-    if (starSplitsEdge(placed, edge.i, edge.j)) return;
-    keptKeys.add(key);
-    kept.push(edge);
-  };
-
-  // Forced links (click-order + line junctions) always draw
-  for (const edge of forced) {
-    pushEdge(edge);
-  }
-
-  // Closed-shape cleanup runs per shape group so shapes stay distinct
-  const byShape = new Map<number, number[]>();
-  for (let i = 0; i < placed.length; i++) {
-    const sid = placed[i].shapeId ?? i;
-    const list = byShape.get(sid);
-    if (list) list.push(i);
-    else byShape.set(sid, [i]);
-  }
-
-  for (const comp of byShape.values()) {
-    if (comp.length < 2) continue;
-
-    const compSet = new Set(comp);
-    const localEdges = raw.filter(
-      (e) => compSet.has(e.i) && compSet.has(e.j),
-    );
-
-    if (localEdges.length <= comp.length - 1) {
-      for (const edge of localEdges) pushEdge(edge);
-      continue;
-    }
-
-    const hullLocal = convexHullIndices(comp.map((idx) => placed[idx]));
-    if (hullLocal.length < 3) {
-      for (const edge of localEdges) pushEdge(edge);
-      continue;
-    }
-
-    const hullGlobal = hullLocal.map((hi) => comp[hi]);
-    const hullSet = new Set(hullGlobal);
-    const rim = new Set<string>();
-
-    for (let h = 0; h < hullGlobal.length; h++) {
-      const a = hullGlobal[h];
-      const b = hullGlobal[(h + 1) % hullGlobal.length];
-      rim.add(a < b ? `${a}-${b}` : `${b}-${a}`);
-    }
-
-    for (const edge of localEdges) {
-      const key =
-        edge.i < edge.j ? `${edge.i}-${edge.j}` : `${edge.j}-${edge.i}`;
-      const bothOnHull = hullSet.has(edge.i) && hullSet.has(edge.j);
-      if (bothOnHull && !rim.has(key)) continue;
-      pushEdge(edge);
-    }
-
-    for (let h = 0; h < hullGlobal.length; h++) {
-      const a = hullGlobal[h];
-      const b = hullGlobal[(h + 1) % hullGlobal.length];
-      const d = Math.hypot(
-        placed[a].x - placed[b].x,
-        placed[a].y - placed[b].y,
-      );
-      if (d <= CONSTELLATION_RADIUS * 1.5) {
-        pushEdge({ i: a, j: b, d });
-      }
-    }
-
-    for (const idx of comp) {
-      if (hullSet.has(idx)) continue;
-      let bestJ = -1;
-      let bestD = Infinity;
-      for (const other of comp) {
-        if (other === idx) continue;
-        const d = Math.hypot(
-          placed[idx].x - placed[other].x,
-          placed[idx].y - placed[other].y,
-        );
-        if (d < bestD && d <= CONSTELLATION_RADIUS * 1.35) {
-          bestD = d;
-          bestJ = other;
-        }
-      }
-      if (bestJ >= 0) pushEdge({ i: idx, j: bestJ, d: bestD });
-    }
-  }
-
-  return kept;
+  return collectForcedEdges(placed);
 }
 
 function drawConstellations(ctx: CanvasRenderingContext2D, stars: Star[]) {
@@ -1362,22 +1180,85 @@ function drawConstellations(ctx: CanvasRenderingContext2D, stars: Star[]) {
   for (const { i, j, d } of edges) {
     const a = placed[i];
     const b = placed[j];
-    const fade = 1 - Math.min(1, d / (CONSTELLATION_RADIUS * 1.35));
+    const fade = 1 - Math.min(1, d / LINE_FADE_PX) * 0.45;
 
-    ctx.strokeStyle = `rgba(160, 205, 255,${0.08 + fade * 0.22})`;
-    ctx.lineWidth = 2.8;
+    ctx.strokeStyle = `rgba(150, 200, 255,${0.14 * fade})`;
+    ctx.lineWidth = 1.6;
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
 
-    ctx.strokeStyle = `rgba(210, 230, 255,${0.22 + fade * 0.55})`;
-    ctx.lineWidth = 0.9;
+    ctx.strokeStyle = `rgba(220, 236, 255,${0.72 * fade})`;
+    ctx.lineWidth = 0.55;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
+  }
+}
+
+/** Rubber-band preview + active/closeable anchor rings (Illustrator pen cues) */
+function drawPenOverlay(
+  ctx: CanvasRenderingContext2D,
+  pen: Star | null,
+  pathOrigin: Star | null,
+  strokeLen: number,
+  pointer: { x: number; y: number; active: boolean } | null,
+) {
+  if (!pen || !pointer?.active) return;
+
+  const nearOrigin =
+    pathOrigin &&
+    strokeLen >= 3 &&
+    Math.hypot(pointer.x - pathOrigin.x, pointer.y - pathOrigin.y) <=
+      STAR_SNAP_PX;
+
+  // Rubber band from active anchor to cursor (dashed, like AI pen)
+  if (!nearOrigin) {
+    ctx.save();
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = "rgba(200, 225, 255, 0.4)";
+    ctx.lineWidth = 0.55;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(pen.x, pen.y);
+    ctx.lineTo(pointer.x, pointer.y);
+    ctx.stroke();
+    ctx.restore();
+  } else if (pathOrigin) {
+    // Closing preview — solid soft line back to start
+    ctx.save();
+    ctx.strokeStyle = "rgba(180, 220, 255, 0.5)";
+    ctx.lineWidth = 0.55;
+    ctx.beginPath();
+    ctx.moveTo(pen.x, pen.y);
+    ctx.lineTo(pathOrigin.x, pathOrigin.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Active endpoint ring
+  ctx.save();
+  ctx.strokeStyle = "rgba(220, 235, 255, 0.8)";
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.arc(pen.x, pen.y, 3.5, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // Closeable start ring (bigger when cursor is over it)
+  if (pathOrigin && strokeLen >= 3) {
+    ctx.save();
+    ctx.strokeStyle = nearOrigin
+      ? "rgba(255, 255, 255, 0.9)"
+      : "rgba(180, 210, 255, 0.5)";
+    ctx.lineWidth = nearOrigin ? 0.8 : 0.55;
+    ctx.beginPath();
+    ctx.arc(pathOrigin.x, pathOrigin.y, nearOrigin ? 4.5 : 3.5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -1408,6 +1289,11 @@ export default function GalaxyBackground() {
     let galaxyDrift = 0;
     let nextStarId = 1;
     let nextShapeId = 1;
+    // Illustrator-style pen: active anchor + path start for closing
+    let penStar: Star | null = null;
+    let pathOrigin: Star | null = null;
+    let strokeLen = 0;
+    let pointer: { x: number; y: number; active: boolean } | null = null;
     let raf = 0;
     let lastTs = 0;
     let shootTimer = 0;
@@ -1480,68 +1366,152 @@ export default function GalaxyBackground() {
       scheduleNextShoot();
     };
 
-    const onClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("a, button")) return;
+    const liftPen = () => {
+      penStar = null;
+      pathOrigin = null;
+      strokeLen = 0;
+    };
 
-      const rect = starsCanvas.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * width;
-      const y = ((event.clientY - rect.top) / rect.height) * height;
-      if (y > height * viewportBand) return;
+    const idOf = (s: Star) => (s.id == null ? (s.id = nextStarId++) : s.id);
 
+    const linkStars = (from: Star, to: Star) => {
+      if (from === to) return;
+      const fromId = idOf(from);
+      to.linkIds = to.linkIds ?? [];
+      if (!to.linkIds.includes(fromId)) to.linkIds.push(fromId);
+    };
+
+    const makePlacedStar = (x: number, y: number) => {
       const star = createStar(width, Math.floor(height * viewportBand));
       star.vx = 0;
       star.vy = 0;
       star.placed = true;
       star.opacity = Math.max(star.opacity, 0.85);
-      // Random size each click — tiny pinpoints through bold sparks
       star.size = 0.9 + Math.random() * 2.6;
       star.points = 4 + Math.floor(Math.random() * 3);
       star.id = nextStarId++;
+      star.x = x;
+      star.y = y;
+      return star;
+    };
 
-      // Click on an existing line → snap on, split it, start a separate shape
-      // that is still junction-linked to both endpoints.
+    const canvasPoint = (event: MouseEvent) => {
+      const rect = starsCanvas.getBoundingClientRect();
+      return {
+        x: ((event.clientX - rect.left) / rect.width) * width,
+        y: ((event.clientY - rect.top) / rect.height) * height,
+      };
+    };
+
+    const onPointerMove = (event: MouseEvent) => {
+      if (!width || !height) return;
+      const { x, y } = canvasPoint(event);
+      const inBand = y <= height * viewportBand;
+      pointer = { x, y, active: inBand };
+      const el = starsCanvas.parentElement;
+      if (el) el.style.cursor = inBand ? "crosshair" : "";
+    };
+
+    const onPointerLeave = () => {
+      if (pointer) pointer.active = false;
+      const el = starsCanvas.parentElement;
+      if (el) el.style.cursor = "";
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      // Escape lifts the pen — ends the open path without deleting it
+      if (event.key === "Escape" && penStar) {
+        liftPen();
+        event.preventDefault();
+      }
+    };
+
+    const onDblClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("a, button")) return;
+      // Double-click ends the path (last click already placed the final point)
+      if (penStar) {
+        liftPen();
+        event.preventDefault();
+      }
+    };
+
+    const onClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("a, button")) return;
+
+      const { x, y } = canvasPoint(event);
+      if (y > height * viewportBand) return;
+
+      // 1) Snap to an existing star — close, join, or continue from it
+      const nearest = findNearestStar(placedStars, x, y, STAR_SNAP_PX);
+      if (nearest) {
+        idOf(nearest);
+
+        // Close path: click the origin while the stroke has enough points
+        if (
+          penStar &&
+          pathOrigin &&
+          nearest === pathOrigin &&
+          strokeLen >= 3 &&
+          penStar !== pathOrigin
+        ) {
+          linkStars(penStar, pathOrigin);
+          liftPen();
+          return;
+        }
+
+        // Continue / branch from this star
+        if (penStar && penStar !== nearest) {
+          linkStars(penStar, nearest);
+          if (nearest.shapeId == null) {
+            nearest.shapeId = penStar.shapeId ?? nextShapeId++;
+          }
+          penStar = nearest;
+          strokeLen += 1;
+          return;
+        }
+
+        // Idle pen: pick up this star as the active anchor (continue / branch)
+        penStar = nearest;
+        pathOrigin = nearest;
+        strokeLen = 1;
+        return;
+      }
+
+      // 2) Snap onto an existing segment → split into a junction
       const onLine = findLineUnderPoint(placedStars, x, y);
       if (onLine) {
         const a = placedStars[onLine.i];
         const b = placedStars[onLine.j];
-        star.x = onLine.x;
-        star.y = onLine.y;
-        star.shapeId = nextShapeId++;
-        if (a.id == null) a.id = nextStarId++;
-        if (b.id == null) b.id = nextStarId++;
-        star.linkIds = [a.id, b.id];
-      } else {
-        star.x = x;
-        star.y = y;
-
-        // Connect in click order — each new star links to recent ones
-        // only when they're close enough.
-        const recent = placedStars.slice(-3);
-        const linkIds: number[] = [];
-        for (let r = recent.length - 1; r >= 0; r--) {
-          const prev = recent[r];
-          if (prev.id == null) prev.id = nextStarId++;
-          const d = Math.hypot(star.x - prev.x, star.y - prev.y);
-          if (d <= CONSTELLATION_RADIUS) {
-            linkIds.push(prev.id);
-          }
-        }
-
-        if (linkIds.length > 0) {
-          const lastLinked = recent
-            .slice()
-            .reverse()
-            .find((p) => p.id != null && linkIds.includes(p.id));
-          star.shapeId = lastLinked?.shapeId ?? nextShapeId++;
-          star.linkIds = linkIds;
+        const star = makePlacedStar(onLine.x, onLine.y);
+        star.shapeId = a.shapeId ?? b.shapeId ?? nextShapeId++;
+        star.linkIds = [idOf(a), idOf(b)];
+        if (penStar) linkStars(penStar, star);
+        placedStars.push(star);
+        if (!penStar) {
+          pathOrigin = star;
+          strokeLen = 1;
         } else {
-          // Too far from recent stars — start a fresh constellation
-          star.shapeId = nextShapeId++;
+          strokeLen += 1;
         }
+        penStar = star;
+        return;
       }
 
+      // 3) Place a new anchor — always continue if pen is down (no distance limit)
+      const star = makePlacedStar(x, y);
+      if (penStar) {
+        linkStars(penStar, star);
+        star.shapeId = penStar.shapeId ?? nextShapeId++;
+        strokeLen += 1;
+      } else {
+        star.shapeId = nextShapeId++;
+        pathOrigin = star;
+        strokeLen = 1;
+      }
       placedStars.push(star);
+      penStar = star;
     };
 
     const tick = (ts: number) => {
@@ -1699,11 +1669,13 @@ export default function GalaxyBackground() {
           }
         }
 
+        drawPenOverlay(ctx, penStar, pathOrigin, strokeLen, pointer);
       } else {
         drawConstellations(ctx, placedStars);
         for (const star of allStars()) {
           drawStarGlyph(ctx, star, star.opacity);
         }
+        drawPenOverlay(ctx, penStar, pathOrigin, strokeLen, pointer);
       }
 
       raf = requestAnimationFrame(tick);
@@ -1717,18 +1689,48 @@ export default function GalaxyBackground() {
     motionQuery.addEventListener("change", onMotionChange);
     const host = starsCanvas.parentElement;
 
+    let resizeTimer = 0;
+    let builtW = window.innerWidth;
+    let builtH = window.innerHeight;
+
     rebuild();
+    builtW = window.innerWidth;
+    builtH = window.innerHeight;
     // First meteor within the normal 5–10s window
     shootTimer = 0;
     raf = requestAnimationFrame(tick);
 
-    window.addEventListener("resize", rebuild);
+    const onResize = () => {
+      const dw = Math.abs(window.innerWidth - builtW);
+      const dh = Math.abs(window.innerHeight - builtH);
+      // Ignore height-only jitter from the mobile URL bar showing/hiding on
+      // scroll — otherwise the whole sky rebuilds (and resets) on every scroll.
+      if (dw === 0 && dh < 180) return;
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        rebuild();
+        builtW = window.innerWidth;
+        builtH = window.innerHeight;
+      }, 200);
+    };
+
+    window.addEventListener("resize", onResize);
+    window.addEventListener("keydown", onKeyDown);
     host?.addEventListener("click", onClick);
+    host?.addEventListener("dblclick", onDblClick);
+    host?.addEventListener("mousemove", onPointerMove);
+    host?.addEventListener("mouseleave", onPointerLeave);
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", rebuild);
+      window.clearTimeout(resizeTimer);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("keydown", onKeyDown);
       host?.removeEventListener("click", onClick);
+      host?.removeEventListener("dblclick", onDblClick);
+      host?.removeEventListener("mousemove", onPointerMove);
+      host?.removeEventListener("mouseleave", onPointerLeave);
+      if (host) host.style.cursor = "";
       motionQuery.removeEventListener("change", onMotionChange);
     };
   }, []);

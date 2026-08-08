@@ -53,7 +53,7 @@ export default function Hero() {
         >
           <div className="text-body max-w-[315px]">
             <p>The more stars the more beautiful the sky becomes</p>
-            <p>Click to add more stars</p>
+            <p>Click to draw · close on the first star · Esc to lift</p>
           </div>
           <p className="text-body max-w-[248px] text-right">
             Learn more about my design philosophy
