@@ -37,34 +37,15 @@ export function CtrlvoxCard() {
       tags="Product Design | B2B | Internship | Shipped"
       description="Creating a digital presence for an invisible product."
     >
-      <div className="absolute inset-0 bg-[#090909]">
-        <div className="absolute left-[54.5%] top-[16.5%] aspect-square w-[41.4%] -translate-x-[10%]">
-          <Image
-            src="/projects/ctrlvox-x.png"
-            alt=""
-            fill
-            sizes="(max-width: 1024px) 40vw, 280px"
-            className="object-cover"
-            priority
-          />
-        </div>
-        <p className="font-poppins absolute left-[4.15%] top-[8.9%] w-[64%] text-[clamp(26px,6.6vw,44.5px)] font-medium tracking-[1.33px] text-[#a6d9c6]">
-          CTRLVOX
-        </p>
-        <div className="font-poppins absolute left-[4.15%] top-[22.8%] w-[64%] text-[clamp(26px,6.6vw,44.5px)] font-medium tracking-[0.45px] text-white">
-          <p className="leading-[0.64]">ON-DEVICE</p>
-          <p className="leading-[0.64]">VOICE & CHAT</p>
-          <p className="leading-[0.64]">MODERATION</p>
-        </div>
-        <div className="absolute bottom-[8.2%] left-[4.15%] h-[6%] w-[29.6%]">
-          <Image
-            src="/projects/ctrlvox-logo.png"
-            alt="databiomes"
-            fill
-            sizes="200px"
-            className="object-contain object-left"
-          />
-        </div>
+      <div className="project-media project-media--ctrlvox absolute inset-0">
+        <Image
+          src="/projects/ctrlvox-cover.png"
+          alt="Ctrlvox by Databiomes — on-device voice and chat moderation"
+          fill
+          sizes="(max-width: 1024px) 100vw, 674px"
+          className="object-cover"
+          priority
+        />
       </div>
     </ProjectCard>
   );
@@ -77,14 +58,13 @@ export function DsaCard() {
       tags="Brand Strategy | System Thinking | Shipped"
       description="Creating a digital presence for an invisible product."
     >
-      <div className="absolute inset-0 flex items-center justify-center bg-[#1050c0]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/projects/dsa-logo.svg"
+      <div className="project-media project-media--dsa absolute inset-0">
+        <Image
+          src="/projects/dsa-cover.png"
           alt="dsa"
-          width={254}
-          height={138}
-          className="h-auto w-[37.7%] max-w-[254px]"
+          fill
+          sizes="(max-width: 1024px) 100vw, 674px"
+          className="object-cover"
         />
       </div>
     </ProjectCard>

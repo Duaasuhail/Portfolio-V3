@@ -12,7 +12,20 @@
   --background: var(--sky-deep);
   --foreground: #ffffff;
   --surface: var(--sky-cloud);
-  --muted: #686868;
+
+  /* Greyscale — Figma tokens */
+  --greyscale-950: #131314;
+  --greyscale-900: #212122;
+  --greyscale-700: #313134;
+  --greyscale-600: #424348;
+  --greyscale-500: #676971;
+  --greyscale-400: #81838b;
+  --greyscale-300: #9b9ca5;
+  --greyscale-200: #b5b6ba;
+  --greyscale-100: #d9dadd;
+  --greyscale-50: #e8e8eb;
+
+  --muted: var(--greyscale-500);
   --ctrlvox-mint: #a6d9c6;
   --dsa-blue: #1050c0;
 
@@ -22,8 +35,15 @@
   --page-content: 100%;
   --nav-top: 40px;
   --projects-gap: 20px;
+  /* 7.75rem (124px) — cream between hero gradient end and Selected Projects */
+  --projects-top-gap: clamp(3.75rem, 8.2vw, 7.75rem);
+  /* 8rem (128px) — cream between project cards and footer sky */
+  --sky-content-gap: clamp(4rem, 8.47vw, 8rem);
+  /* Tip sits lower — extra runway into the dotted cream */
+  --sky-tip-offset: 120px;
   --hero-footer-bottom: 102px;
   --dot-grid: rgba(0, 0, 40, 0.055);
+  --dot-grid-size: 14px;
 }
 
 @theme inline {
@@ -37,17 +57,27 @@
   --color-sky-horizon: var(--sky-horizon);
   --color-sky-cloud: var(--sky-cloud);
   --color-muted: var(--muted);
+  --color-greyscale-950: var(--greyscale-950);
+  --color-greyscale-900: var(--greyscale-900);
+  --color-greyscale-700: var(--greyscale-700);
+  --color-greyscale-600: var(--greyscale-600);
+  --color-greyscale-500: var(--greyscale-500);
+  --color-greyscale-400: var(--greyscale-400);
+  --color-greyscale-300: var(--greyscale-300);
+  --color-greyscale-200: var(--greyscale-200);
+  --color-greyscale-100: var(--greyscale-100);
+  --color-greyscale-50: var(--greyscale-50);
   --color-ctrlvox-mint: var(--ctrlvox-mint);
   --color-dsa-blue: var(--dsa-blue);
   --font-serif: var(--font-alegreya);
-  --font-sans: var(--font-alegreya-sans);
+  --font-sans: var(--font-source-sans);
   --font-poppins: var(--font-poppins);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-alegreya-sans), sans-serif;
+  font-family: var(--font-source-sans), sans-serif;
 }
 
 .galaxy-canvas {
@@ -55,24 +85,479 @@ body {
   image-rendering: crisp-edges;
 }
 
+.galaxy-canvas--bitmap {
+  mix-blend-mode: overlay;
+  opacity: 0.95;
+}
+
+.projects-section {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  color: var(--sky-deep);
+  /* Cream runway after hero gradient, then Selected Projects */
+  padding-top: var(--projects-top-gap);
+  /* Solid cream through cards + gap, then fade into the footer sky */
+  padding-bottom: calc(var(--sky-content-gap) + 42vh);
+  background-color: transparent;
+  background-image:
+    radial-gradient(var(--dot-grid) 1px, transparent 1px),
+    linear-gradient(
+      to bottom,
+      var(--surface) 0%,
+      var(--surface) calc(100% - 42vh),
+      color-mix(in srgb, var(--surface) 55%, transparent) calc(100% - 22vh),
+      transparent 100%
+    );
+  background-size: var(--dot-grid-size) var(--dot-grid-size), 100% 100%;
+  background-repeat: repeat, no-repeat;
+}
+
+.site-footer {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  min-height: 115vh;
+  margin-top: -42vh;
+  /* Same base as hero cream tip — inverted sky fills deep space below */
+  background-color: var(--surface);
+  overflow: hidden;
+  overflow-x: clip;
+  color: #ffffff;
+}
+
+.site-footer-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: inherit;
+  padding-top: 48vh;
+  padding-bottom: clamp(32px, 5vh, 64px);
+  pointer-events: none;
+}
+
+.site-footer-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 48px;
+  width: 100%;
+  margin-bottom: clamp(80px, 18vh, 200px);
+}
+
+.site-footer-headline {
+  font-family: var(--font-alegreya), serif;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.96px;
+  color: #ffffff;
+  margin: 0 0 24px;
+}
+
+.site-footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.site-footer-links a {
+  pointer-events: auto;
+  font-family: var(--font-source-sans), sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--greyscale-100);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.2s ease;
+}
+
+.site-footer-links a:hover {
+  opacity: 0.7;
+}
+
+.site-footer-col--right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.site-footer-credits {
+  text-align: center;
+  font-family: var(--font-source-sans), sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: #fefefe;
+}
+
+.site-footer-credits p {
+  margin: 0;
+}
+
+@media (max-width: 767px) {
+  .site-footer-main {
+    flex-direction: column;
+    gap: 40px;
+    margin-bottom: 64px;
+  }
+
+  .site-footer-col--right {
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .site-footer-content {
+    padding-top: 36vh;
+  }
+}
+
+.hero {
+  background-color: var(--surface);
+}
+
+/*
+ * Mesh tip stays organic — only deep/blue layers dissolve.
+ * Cream mounds + floor own the handoff into the page surface.
+ */
+.hero .sky-layer--base,
+.hero .sky-layer--mesh,
+.hero .sky-layer--flare {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.92) 52%,
+    rgba(0, 0, 0, 0.65) 64%,
+    rgba(0, 0, 0, 0.35) 76%,
+    rgba(0, 0, 0, 0.12) 88%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.92) 52%,
+    rgba(0, 0, 0, 0.65) 64%,
+    rgba(0, 0, 0, 0.35) 76%,
+    rgba(0, 0, 0, 0.12) 88%,
+    transparent 100%
+  );
+}
+
+.hero .sky-layer--hills,
+.hero .sky-layer--mounds,
+.hero .sky-layer--crest {
+  /* No flat mask — uneven organic endings must stay visible */
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Bitmap softens into cream — long dissolve like the reference site */
+.hero .galaxy-canvas {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 48%,
+    rgba(0, 0, 0, 0.95) 62%,
+    rgba(0, 0, 0, 0.7) 74%,
+    rgba(0, 0, 0, 0.35) 86%,
+    rgba(0, 0, 0, 0.1) 94%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 48%,
+    rgba(0, 0, 0, 0.95) 62%,
+    rgba(0, 0, 0, 0.7) 74%,
+    rgba(0, 0, 0, 0.35) 86%,
+    rgba(0, 0, 0, 0.1) 94%,
+    transparent 100%
+  );
+}
+
+.hero .galaxy-canvas--bitmap {
+  /* Soften overlay at the tip so dither doesn’t fight cream */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 45%,
+    rgba(0, 0, 0, 0.85) 65%,
+    rgba(0, 0, 0, 0.4) 82%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 45%,
+    rgba(0, 0, 0, 0.85) 65%,
+    rgba(0, 0, 0, 0.4) 82%,
+    transparent 100%
+  );
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--projects-gap);
+}
+
+@media (min-width: 1024px) {
+  .projects-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.project-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.project-media--ctrlvox {
+  background: #090909;
+}
+
+.project-media--dsa {
+  background: var(--dsa-blue);
+}
+
+/* —— Sky ambient (moved off inline styles for clarity + cheaper updates) —— */
+.sky-ambient {
+  --sky-blur-mesh: 48px;
+  --sky-blur-flare: 56px;
+  /* Slightly more blur so round lobes stay soft */
+  --sky-blur-hills: 22px;
+  --sky-blur-mounds: 16px;
+  --sky-blur-crest: 12px;
+  contain: paint;
+}
+
+/* Footer = identical hero sky, flipped so cream meets projects */
+.sky-ambient--footer {
+  transform: scaleY(-1);
+}
+
+html[data-sky-quality="medium"] .sky-ambient {
+  --sky-blur-mesh: 40px;
+  --sky-blur-flare: 44px;
+  --sky-blur-hills: 18px;
+  --sky-blur-mounds: 14px;
+  --sky-blur-crest: 10px;
+}
+
+html[data-sky-quality="low"] .sky-ambient {
+  --sky-blur-mesh: 28px;
+  --sky-blur-flare: 28px;
+  --sky-blur-hills: 14px;
+  --sky-blur-mounds: 11px;
+  --sky-blur-crest: 8px;
+}
+
+html[data-sky-quality="low"] .sky-layer--flare {
+  display: none;
+}
+
+.sky-layer {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(0);
+}
+
+.sky-layer--base {
+  background:
+    radial-gradient(ellipse 120% 70% at 50% -10%, var(--sky-midnight) 0%, transparent 55%),
+    radial-gradient(
+      ellipse 90% 50% at calc(80% + var(--drift-x1)) calc(20% + var(--drift-y1)),
+      color-mix(in srgb, var(--sky-royal) 85%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 80% 45% at calc(15% + var(--drift-x2)) calc(25% + var(--drift-y2)),
+      color-mix(in srgb, var(--sky-royal) 75%, transparent) 0%,
+      transparent 55%
+    ),
+    linear-gradient(
+      to bottom,
+      var(--sky-deep) 0%,
+      var(--sky-deep) 38%,
+      var(--sky-midnight) 52%,
+      var(--sky-royal) 64%,
+      var(--sky-bright) 76%,
+      var(--sky-horizon) 86%,
+      color-mix(in srgb, var(--sky-horizon) 40%, var(--surface)) 93%,
+      var(--surface) 100%
+    );
+}
+
+.sky-layer--mesh {
+  filter: blur(var(--sky-blur-mesh));
+  background:
+    radial-gradient(ellipse 70% 55% at calc(30% + var(--drift-x1)) calc(42% + var(--drift-y1)), color-mix(in srgb, var(--sky-royal) 95%, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 65% 50% at calc(72% + var(--drift-x2)) calc(48% + var(--drift-y2)), color-mix(in srgb, var(--sky-bright) 85%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 40% at calc(50% + var(--drift-x3)) calc(55% + var(--drift-y3)), color-mix(in srgb, var(--sky-midnight) 90%, transparent) 0%, transparent 62%),
+    radial-gradient(ellipse 90% 40% at calc(50% + var(--drift-hx)) calc(60% + var(--drift-hy)), color-mix(in srgb, var(--sky-bright) 90%, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 50% 42% at calc(12% + var(--drift-x2)) calc(52% + var(--drift-y1)), color-mix(in srgb, var(--sky-bright) 80%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at calc(88% + var(--drift-x1)) calc(38% + var(--drift-y3)), color-mix(in srgb, var(--sky-royal) 90%, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 48% 40% at calc(58% + var(--drift-x3)) calc(35% + var(--drift-y2)), color-mix(in srgb, var(--sky-horizon) 70%, transparent) 0%, transparent 62%),
+    radial-gradient(ellipse 62% 48% at calc(22% + var(--drift-hx)) calc(68% + var(--drift-hy)), color-mix(in srgb, var(--sky-royal) 88%, transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 45% at calc(78% + var(--drift-x2)) calc(65% + var(--drift-y1)), color-mix(in srgb, var(--sky-bright) 82%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 50% at calc(45% + var(--drift-x1)) calc(72% + var(--drift-y3)), color-mix(in srgb, var(--sky-horizon) 75%, transparent) 0%, transparent 70%);
+}
+
+.sky-layer--flare {
+  filter: blur(var(--sky-blur-flare));
+  background:
+    radial-gradient(ellipse 28% 22% at var(--flare-x1) var(--flare-y1), color-mix(in srgb, var(--sky-bright) calc(var(--flare-o1) * 78%), transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 24% 20% at var(--flare-x2) var(--flare-y2), color-mix(in srgb, var(--sky-horizon) calc(var(--flare-o2) * 72%), transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 32% 18% at var(--flare-x3) var(--flare-y3), color-mix(in srgb, var(--sky-bright) calc(var(--flare-o3) * 65%), transparent) 0%, transparent 72%),
+    radial-gradient(ellipse 20% 16% at var(--flare-x4) var(--flare-y4), color-mix(in srgb, var(--sky-horizon) calc(var(--flare-o4) * 80%), transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 26% 24% at var(--flare-x5) var(--flare-y5), color-mix(in srgb, var(--sky-bright) calc(var(--flare-o5) * 70%), transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 18% 14% at calc(var(--flare-x1) + 12%) calc(var(--flare-y3) - 4%), color-mix(in srgb, var(--sky-horizon) calc(var(--flare-o3) * 55%), transparent) 0%, transparent 68%),
+    radial-gradient(ellipse 22% 17% at calc(var(--flare-x2) - 8%) calc(var(--flare-y1) + 6%), color-mix(in srgb, var(--sky-bright) calc(var(--flare-o1) * 50%), transparent) 0%, transparent 66%);
+}
+
+.sky-layer--hills {
+  /* Soft color mesh behind round cream lobes */
+  inset: auto -30% 0;
+  height: 58%;
+  filter: blur(var(--sky-blur-hills));
+  transform: translate3d(0, var(--sky-tip-offset), 0);
+  opacity: 1;
+  background:
+    radial-gradient(circle 48% at calc(8% + var(--drift-x1)) 88%, var(--sky-royal) 0%, transparent 68%),
+    radial-gradient(circle 56% at calc(28% + var(--drift-x2)) calc(72% + var(--drift-hy)), var(--sky-bright) 0%, transparent 62%),
+    radial-gradient(ellipse 70% 55% at calc(48% + var(--drift-x3)) 90%, var(--sky-horizon) 0%, transparent 66%),
+    radial-gradient(circle 52% at calc(68% + var(--drift-hx)) calc(70% + var(--drift-y1)), var(--sky-bright) 0%, transparent 64%),
+    radial-gradient(ellipse 65% 50% at calc(88% + var(--drift-x1)) 92%, var(--sky-royal) 0%, transparent 68%),
+    radial-gradient(circle 44% at calc(98% + var(--drift-x2)) calc(78% + var(--drift-y3)), var(--sky-bright) 0%, transparent 66%);
+}
+
+.sky-layer--mounds {
+  /*
+   * Round hill lobes — wide circles / soft ellipses at staggered heights.
+   * Different sizes + vertical positions keep an organic silhouette without pillars.
+   */
+  inset: auto -28% 0;
+  height: 62%;
+  filter: blur(var(--sky-blur-mounds));
+  transform: translate3d(0, var(--sky-tip-offset), 0);
+  opacity: 1;
+  background:
+    /* Tall round hills */
+    radial-gradient(circle 42% at calc(4% + var(--drift-x1)) 108%, var(--sky-cloud) 0%, var(--sky-cloud) 48%, transparent 62%),
+    radial-gradient(ellipse 58% 72% at calc(18% + var(--drift-x2)) calc(88% + var(--drift-hy)), var(--sky-cloud) 0%, var(--sky-cloud) 52%, transparent 58%),
+    radial-gradient(circle 36% at calc(32% + var(--drift-x3)) 112%, var(--sky-cloud) 0%, var(--sky-cloud) 44%, transparent 66%),
+    radial-gradient(ellipse 62% 78% at calc(46% + var(--drift-hx)) calc(82% + var(--drift-y1)), var(--sky-cloud) 0%, var(--sky-cloud) 54%, transparent 56%),
+    radial-gradient(circle 38% at calc(58% + var(--drift-x1)) 110%, var(--sky-cloud) 0%, var(--sky-cloud) 46%, transparent 64%),
+    radial-gradient(ellipse 60% 76% at calc(72% + var(--drift-x2)) calc(84% + var(--drift-y2)), var(--sky-cloud) 0%, var(--sky-cloud) 52%, transparent 58%),
+    radial-gradient(circle 34% at calc(84% + var(--drift-x3)) 112%, var(--sky-cloud) 0%, var(--sky-cloud) 42%, transparent 66%),
+    radial-gradient(ellipse 56% 70% at calc(96% + var(--drift-hx)) calc(90% + var(--drift-hy)), var(--sky-cloud) 0%, var(--sky-cloud) 50%, transparent 60%),
+    /* Lower round shoulders */
+    radial-gradient(circle 48% at calc(10% + var(--drift-x3)) 118%, var(--sky-cloud) 0%, var(--sky-cloud) 55%, transparent 68%),
+    radial-gradient(ellipse 55% 48% at calc(40% + var(--drift-hx)) 120%, var(--sky-cloud) 0%, var(--sky-cloud) 52%, transparent 68%),
+    radial-gradient(circle 46% at calc(70% + var(--drift-x1)) 118%, var(--sky-cloud) 0%, var(--sky-cloud) 54%, transparent 68%),
+    radial-gradient(ellipse 50% 45% at calc(92% + var(--drift-x2)) 120%, var(--sky-cloud) 0%, var(--sky-cloud) 52%, transparent 70%);
+}
+
+.sky-layer--crest {
+  /* Soft round ridge — circles + wide ellipses, still staggered */
+  inset: auto -20% 0;
+  height: 48%;
+  filter: blur(var(--sky-blur-crest));
+  opacity: 1;
+  transform: translate3d(0, var(--sky-tip-offset), 0);
+  background:
+    radial-gradient(circle 38% at calc(6% + var(--drift-x1)) 115%, var(--sky-cloud) 0%, var(--sky-cloud) 50%, transparent 64%),
+    radial-gradient(ellipse 52% 68% at calc(22% + var(--drift-x2)) calc(95% + var(--drift-hy)), var(--sky-cloud) 0%, var(--sky-cloud) 54%, transparent 60%),
+    radial-gradient(circle 32% at calc(38% + var(--drift-x3)) 118%, var(--sky-cloud) 0%, var(--sky-cloud) 46%, transparent 66%),
+    radial-gradient(ellipse 56% 72% at calc(54% + var(--drift-hx)) calc(90% + var(--drift-y1)), var(--sky-cloud) 0%, var(--sky-cloud) 56%, transparent 58%),
+    radial-gradient(circle 34% at calc(68% + var(--drift-x1)) 116%, var(--sky-cloud) 0%, var(--sky-cloud) 48%, transparent 64%),
+    radial-gradient(ellipse 54% 70% at calc(84% + var(--drift-x2)) calc(92% + var(--drift-y2)), var(--sky-cloud) 0%, var(--sky-cloud) 54%, transparent 60%),
+    radial-gradient(circle 36% at calc(96% + var(--drift-x3)) 114%, var(--sky-cloud) 0%, var(--sky-cloud) 50%, transparent 64%);
+}
+
+/* Soft round seal into cream */
+.sky-layer--floor {
+  inset: auto -10% 0;
+  height: 28%;
+  opacity: 1;
+  transform: translate3d(0, var(--sky-tip-offset), 0);
+  filter: blur(12px);
+  background:
+    radial-gradient(circle 42% at 8% 110%, var(--surface) 0%, var(--surface) 52%, transparent 68%),
+    radial-gradient(ellipse 55% 60% at 28% 105%, var(--surface) 0%, var(--surface) 54%, transparent 64%),
+    radial-gradient(circle 38% at 48% 112%, var(--surface) 0%, var(--surface) 50%, transparent 70%),
+    radial-gradient(ellipse 58% 62% at 68% 104%, var(--surface) 0%, var(--surface) 56%, transparent 62%),
+    radial-gradient(circle 40% at 88% 110%, var(--surface) 0%, var(--surface) 52%, transparent 68%),
+    linear-gradient(
+      to top,
+      var(--surface) 0%,
+      var(--surface) 40%,
+      color-mix(in srgb, var(--surface) 55%, transparent) 70%,
+      transparent 92%
+    );
+}
+
+/*
+ * Same cream + dots as projects — soft fade so the tip blends
+ * into the dotted background with no hard seam.
+ */
+.sky-layer--runway {
+  inset: auto 0 0;
+  height: calc(26% + var(--sky-tip-offset));
+  transform: translate3d(0, var(--sky-tip-offset), 0);
+  opacity: 1;
+  filter: none;
+  background-color: var(--surface);
+  background-image: radial-gradient(var(--dot-grid) 1px, transparent 1px);
+  background-size: var(--dot-grid-size) var(--dot-grid-size);
+  background-repeat: repeat;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.85) 58%,
+    rgba(0, 0, 0, 0.35) 78%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.85) 58%,
+    rgba(0, 0, 0, 0.35) 78%,
+    transparent 100%
+  );
+}
+
 .text-h1 {
   font-family: var(--font-alegreya), serif;
   font-size: 28px;
   font-weight: 400;
-  line-height: 1;
+  line-height: 35px;
   letter-spacing: 1.12px;
+  color: var(--greyscale-50);
+  text-align: center;
 }
 
 .text-h3 {
-  font-family: var(--font-alegreya-sans), sans-serif;
+  font-family: var(--font-source-sans), sans-serif;
   font-size: 20px;
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
+  color: var(--greyscale-300);
 }
 
 .text-nav {
-  font-family: var(--font-alegreya-sans), sans-serif;
+  font-family: var(--font-source-sans), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 1;
@@ -80,7 +565,7 @@ body {
 }
 
 .text-body {
-  font-family: var(--font-alegreya-sans), sans-serif;
+  font-family: var(--font-source-sans), sans-serif;
   font-size: 16px;
   font-weight: 400;
   line-height: 18px;

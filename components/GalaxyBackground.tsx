@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import {
+  detectSkyQuality,
+  SKY_QUALITY,
+  type SkyQuality,
+} from "@/lib/skyQuality";
 
 const BAYER_8 = [
   [0, 32, 8, 40, 2, 34, 10, 42],
@@ -13,10 +18,13 @@ const BAYER_8 = [
   [63, 31, 55, 23, 61, 29, 53, 21],
 ];
 
-// Stars canvas matches taller hero sky
-export const LIGHT_FADE_VH = 0.75;
-export const SKY_HEIGHT_VH = 1.75;
+// Same gradient style — shorter overall so cream arrives earlier
+export const LIGHT_FADE_VH = 0.4;
+export const SKY_HEIGHT_VH = 1.4;
+export const FOOTER_SKY_VH = 1.15;
 export const MIST_OVERLAP_VH = 0;
+
+export type GalaxyVariant = "hero" | "footer";
 
 function buildMappedStops(
   stops: [number, number, number, number][],
@@ -31,17 +39,19 @@ function buildMappedStops(
   const [, hr, hg, hb] = stops[4];
   const [, wr, wg, wb] = stops[5];
 
-  // Hold deep longer, then ease through midnight/royal before bright → cream.
+  // Tip colors sit lower so organic ending meets the dotted cream runway
   return [
     [0, dr, dg, db],
-    [heroEnd * 0.55, dr, dg, db],
+    [heroEnd * 0.4, dr, dg, db],
+    [heroEnd * 0.55, mr, mg, mb],
     [heroEnd * 0.72, mr, mg, mb],
-    [heroEnd * 0.92, rr, rg, rb],
-    [heroEnd + span * 0.1, rr, rg, rb],
-    [heroEnd + span * 0.35, br, bg, bb],
-    [heroEnd + span * 0.55, br, bg, bb],
-    [heroEnd + span * 0.72, hr, hg, hb],
-    [heroEnd + span * 0.88, hr, hg, hb],
+    [heroEnd * 0.84, rr, rg, rb],
+    [heroEnd * 0.94, rr, rg, rb],
+    [heroEnd + span * 0.2, br, bg, bb],
+    [heroEnd + span * 0.36, br, bg, bb],
+    [heroEnd + span * 0.54, hr, hg, hb],
+    [heroEnd + span * 0.7, hr, hg, hb],
+    [heroEnd + span * 0.86, wr, wg, wb],
     [1, wr, wg, wb],
   ];
 }
@@ -68,12 +78,10 @@ const GRADIENT_STOP_FALLBACKS: Record<string, [number, number, number]> = {
 /** Base gap between spawn attempts — random jitter applied each time */
 const SHOOTING_STAR_INTERVAL_MS = 2_200;
 const SHOOTING_STAR_INTERVAL_JITTER_MS = 2_400;
-/** Cap concurrent meteors so the sky stays readable */
-const SHOOTING_STAR_MAX = 3;
 /** Keep new streaks away from recent ones (canvas px) */
 const SHOOTING_STAR_SPREAD_PX = 90;
 // Slightly larger on-screen pixels, still dense dither
-const PIXEL_SCALE = 3;
+// Runtime pixel scale comes from lib/skyQuality — see detectSkyQuality()
 
 interface Star {
   x: number;
@@ -109,6 +117,13 @@ const STAR_SNAP_PX = 14;
 const LINE_HIT_PX = 10;
 /** Soft distance used only for line opacity falloff */
 const LINE_FADE_PX = 220;
+/**
+ * How much motion survives `prefers-reduced-motion: reduce`. iOS and macOS
+ * Low Power Mode both report that preference, so freezing outright leaves
+ * phones and laptops with a dead sky. A slow drift respects the intent
+ * (no fast, large, vestibular-triggering movement) while staying alive.
+ */
+const REDUCED_MOTION_SCALE = 0.15;
 
 interface ShootingStar {
   x: number;
@@ -285,42 +300,49 @@ function buildMeshTintField(
   height: number,
   viewportRatio: number,
 ) {
-  const fw = Math.max(64, Math.floor(width / 2.8));
-  const fh = Math.max(48, Math.floor(height / 2.8));
+  const fw = Math.max(72, Math.floor(width / 2.4));
+  const fh = Math.max(56, Math.floor(height / 2.4));
   const brightTint = new Float32Array(fw * fh);
   const cyanTint = new Float32Array(fw * fh);
 
+  // Tall mesh hills — uneven mountain lobes across the tip
+  const blobs = [
+    [0.06, 0.78, 0.09, 0.28],
+    [0.18, 0.62, 0.11, 0.36],
+    [0.3, 0.82, 0.1, 0.24],
+    [0.42, 0.58, 0.13, 0.4],
+    [0.54, 0.84, 0.09, 0.26],
+    [0.66, 0.64, 0.12, 0.34],
+    [0.78, 0.8, 0.1, 0.28],
+    [0.92, 0.66, 0.1, 0.32],
+    [0.24, 0.5, 0.14, 0.3],
+    [0.72, 0.48, 0.13, 0.32],
+  ] as const;
+
   for (let y = 0; y < fh; y++) {
     const ny = y / Math.max(1, fh - 1);
-      const fade = smoothstep(viewportRatio * 1.05, 1, ny);
+    const fade = smootherstep(viewportRatio * 0.85, 1, ny);
 
     for (let x = 0; x < fw; x++) {
       const nx = x / Math.max(1, fw - 1);
-
       const wx =
-        nx +
-        (fbm(nx * 0.85 + 0.4, ny * 0.45, 4) - 0.5) * 0.14 * fade;
+        nx + (fbm(nx * 0.85 + 0.4, ny * 0.45, 4) - 0.5) * 0.16 * fade;
       const wy =
-        ny +
-        (fbm(nx * 0.85 + 2.3, ny * 0.45 + 1.1, 4) - 0.5) * 0.1 * fade;
+        ny + (fbm(nx * 0.85 + 2.3, ny * 0.45 + 1.1, 4) - 0.5) * 0.12 * fade;
 
-      const blobA =
-        Math.exp(-Math.pow((wx - 0.35) / 0.38, 2) - Math.pow((wy - 0.72) / 0.28, 2)) *
-        fade;
-      const blobB =
-        Math.exp(-Math.pow((wx - 0.68) / 0.32, 2) - Math.pow((wy - 0.58) / 0.34, 2)) *
-        fade;
-      const drift =
-        fbm(wx * 1.6 + 0.7, wy * 0.9 + 0.3, 5) * fade;
-
-      brightTint[y * fw + x] = Math.min(
-        1,
-        (blobA * 0.55 + blobB * 0.35 + drift * 0.25) * fade,
-      );
-      cyanTint[y * fw + x] = Math.min(
-        1,
-        (blobB * 0.5 + drift * 0.4 + blobA * 0.15) * fade,
-      );
+      let bright = 0;
+      let cyan = 0;
+      for (let i = 0; i < blobs.length; i++) {
+        const [cx, cy, sx, sy] = blobs[i];
+        const v =
+          Math.exp(-Math.pow((wx - cx) / sx, 2) - Math.pow((wy - cy) / sy, 2)) *
+          fade;
+        if (i % 2 === 0) bright += v;
+        else cyan += v;
+      }
+      const drift = fbm(wx * 1.8 + 0.7, wy * 1.1 + 0.3, 5) * fade;
+      brightTint[y * fw + x] = Math.min(1, bright * 0.85 + drift * 0.42);
+      cyanTint[y * fw + x] = Math.min(1, cyan * 0.85 + drift * 0.48);
     }
   }
 
@@ -332,63 +354,95 @@ function buildOrganicFadeField(
   height: number,
   viewportRatio: number,
 ) {
-  const fw = Math.max(160, Math.floor(width / 1.75));
-  const fh = Math.max(120, Math.floor(height / 1.75));
+  const fw = Math.max(200, Math.floor(width / 1.35));
+  const fh = Math.max(160, Math.floor(height / 1.35));
   const warp = new Float32Array(fw * fh);
   const whiteBlend = new Float32Array(fw * fh);
 
   const heroEnd = viewportRatio;
   const span = 1 - viewportRatio;
-  // Mist only below the first viewport — keep footer zone dark
-  const mistStart = heroEnd + span * 0.08;
-  const mistMid = heroEnd + span * 0.35;
-  const mistFull = heroEnd + span * 0.9;
+  const mistStart = heroEnd;
+  const mistMid = heroEnd + span * 0.22;
+  const mistFull = heroEnd + span * 0.95;
+
+  // Round hill lobes — near-equal sx/sy (circles), staggered cy for silhouette
+  const mounds: [number, number, number, number, number][] = [
+    [0.05, 0.92, 0.22, 0.24, 1.7],
+    [0.16, 0.72, 0.26, 0.28, 2.1],
+    [0.28, 0.9, 0.2, 0.22, 1.5],
+    [0.4, 0.68, 0.28, 0.3, 2.2],
+    [0.52, 0.88, 0.21, 0.23, 1.55],
+    [0.64, 0.7, 0.27, 0.29, 2.15],
+    [0.76, 0.91, 0.2, 0.22, 1.45],
+    [0.88, 0.74, 0.25, 0.27, 2.0],
+    [0.96, 0.86, 0.22, 0.24, 1.65],
+  ];
 
   for (let y = 0; y < fh; y++) {
     const ny = y / Math.max(1, fh - 1);
-    const fadeWeight = smoothstep(mistStart, mistFull, ny);
-    const baseWhite = smoothstep(mistMid, 0.98, ny);
+    const fadeWeight = smootherstep(mistStart, mistFull, ny);
+    const baseWhite = smootherstep(mistMid, 0.995, ny);
 
     for (let x = 0; x < fw; x++) {
       const nx = x / Math.max(1, fw - 1);
 
       const domainX =
-        nx + (fbm(nx * 0.7 + 0.15, ny * 0.38, 5) - 0.5) * 0.28 * fadeWeight;
+        nx + (fbm(nx * 0.35 + 0.15, ny * 0.2, 4) - 0.5) * 0.2 * fadeWeight;
       const domainY =
         ny +
-        (fbm(nx * 0.7 + 2.0, ny * 0.38 + 1.3, 5) - 0.5) * 0.18 * fadeWeight;
+        (fbm(nx * 0.35 + 2.0, ny * 0.2 + 1.3, 4) - 0.5) * 0.14 * fadeWeight;
 
       const macro =
-        fbm(domainX * 0.38 + 0.08, domainY * 0.2 + 0.04, 6) * 0.48;
+        fbm(domainX * 0.16 + 0.08, domainY * 0.08 + 0.04, 4) * 0.35;
       const meso =
-        fbm(domainX * 0.95 + 0.85, domainY * 0.45 + 0.28, 5) * 0.34;
+        fbm(domainX * 0.45 + 0.85, domainY * 0.2 + 0.28, 3) * 0.25;
       const mist =
-        fbm(domainX * 2.2 + 1.5, domainY * 0.9 + 0.65, 4) * 0.18;
+        fbm(domainX * 0.9 + 1.5, domainY * 0.4 + 0.65, 3) * 0.1;
       const ridge = macro + meso + mist;
 
-      const billow =
-        Math.sin(nx * Math.PI * 1.8 + ridge * 5) * 0.045 +
-        Math.sin(nx * Math.PI * 4.6 + domainY * 7) * 0.025;
-      const edgeLift = (ridge - 0.38 + billow) * fadeWeight;
+      let meshMounds = 0;
+      for (let i = 0; i < mounds.length; i++) {
+        const [cx, cy, sx, sy, w] = mounds[i];
+        meshMounds +=
+          Math.exp(
+            -Math.pow((domainX - cx) / sx, 2) - Math.pow((domainY - cy) / sy, 2),
+          ) * w;
+      }
+      meshMounds *= fadeWeight * 1.15;
 
-      warp[y * fw + x] = edgeLift * 0.12;
+      const mountainWave =
+        Math.sin(nx * Math.PI * 3.5 + ridge * 1.5) * 0.1 +
+        Math.sin(nx * Math.PI * 7.0 - ridge) * 0.05;
+      const sideBias = Math.pow(Math.abs(nx - 0.5) * 2, 1.05) * 0.08;
+      const valleyDip =
+        Math.pow(Math.max(0, 0.4 - meshMounds * 0.5), 1.2) * 0.22;
+      const edgeLift =
+        (ridge - 0.12 + mountainWave + meshMounds * 0.95 + sideBias - valleyDip) *
+        fadeWeight;
+
+      warp[y * fw + x] = edgeLift * 0.55;
 
       const cloudLift =
-        Math.pow(Math.max(0, ridge - 0.32 + billow), 1.05) * fadeWeight;
+        Math.pow(Math.max(0, ridge - 0.06 + mountainWave + meshMounds * 0.9), 0.7) *
+        fadeWeight;
       const softPeaks =
-        Math.pow(Math.max(0, macro - 0.42), 1.4) * fadeWeight;
-      const hazeVeil = Math.pow(fadeWeight, 1.15) * 0.38;
-      const lumps = edgeLift * 0.7 * Math.max(baseWhite, fadeWeight * 0.55);
+        Math.pow(Math.max(0, macro - 0.12 + meshMounds * 0.4), 0.8) * fadeWeight;
+      const hazeVeil = Math.pow(fadeWeight, 1.05) * 0.12;
+      const lumps =
+        (edgeLift * 1.4 + meshMounds * 1.35) *
+        Math.max(baseWhite, fadeWeight * 0.85);
 
       whiteBlend[y * fw + x] = Math.min(
         1,
         Math.max(
           0,
-          baseWhite * 0.85 +
+          baseWhite * 0.22 +
             hazeVeil +
-            cloudLift * 0.7 +
-            softPeaks * 0.45 +
-            lumps,
+            cloudLift * 1.5 +
+            softPeaks * 1.0 +
+            lumps -
+            valleyDip * fadeWeight * 1.3 +
+            sideBias * fadeWeight * 0.4,
         ),
       );
     }
@@ -569,6 +623,16 @@ function bakeGalaxyOverlay(width: number, height: number) {
   return { image, bandY: g.bandY };
 }
 
+/**
+ * Motion in this canvas is expressed in internal pixels, but the internal
+ * canvas shrinks with the viewport (width / pixelScale). Without this, a
+ * phone's ~130px-wide canvas makes drift and meteors race across the sky
+ * several times faster than on desktop. Reference canvas is ~560px wide.
+ */
+function motionScale(width: number) {
+  return Math.max(0.4, Math.min(1.1, width / 560));
+}
+
 function milkyWayPoint(width: number, height: number) {
   const bandY = height * 0.26;
   const along = Math.random();
@@ -596,8 +660,9 @@ function createStar(
   biased = false,
   inBand = false,
 ): Star {
-  // Soft current across the sky — varied but calm
-  const speed = 0.018 + Math.random() * 0.032;
+  // Soft current across the sky — varied but calm. Scaled to the canvas so a
+  // narrow phone sky doesn't drift several times faster than a desktop one.
+  const speed = (0.018 + Math.random() * 0.032) * motionScale(width);
   const angle = -0.2 + Math.random() * 0.18;
 
   let x = Math.random() * width;
@@ -645,9 +710,13 @@ function createStar(
   };
 }
 
-function generateStars(width: number, height: number): Star[] {
-  // Readable ambient field — denser, still subtle
-  const count = Math.floor((width * height) / 1100);
+function generateStars(
+  width: number,
+  height: number,
+  starDivisor = 1100,
+): Star[] {
+  // Readable ambient field — density scales with quality tier
+  const count = Math.max(24, Math.floor((width * height) / starDivisor));
   const bandCount = Math.floor(count * 0.45);
   const softCount = Math.floor(count * 0.3);
   const scatterCount = Math.max(0, count - bandCount - softCount);
@@ -707,13 +776,17 @@ function spawnShootingStar(
     }
   };
 
+  // Spread can't exceed what the canvas can actually fit, or every candidate
+  // fails the check on a narrow screen and streaks pile up in one spot.
+  const spread = Math.min(SHOOTING_STAR_SPREAD_PX, width * 0.3);
+
   let x = -4;
   let y = height * 0.1;
   let fromLeft = true;
   for (let attempt = 0; attempt < 10; attempt++) {
     const start = pickStart();
     const farEnough = avoid.every(
-      (p) => Math.hypot(start.x - p.x, start.y - p.y) >= SHOOTING_STAR_SPREAD_PX,
+      (p) => Math.hypot(start.x - p.x, start.y - p.y) >= spread,
     );
     if (farEnough || avoid.length === 0) {
       x = start.x;
@@ -728,8 +801,9 @@ function spawnShootingStar(
     }
   }
 
-  const speed = 2.4 + Math.random() * 1.8;
-  const angleJitter = (Math.random() - 0.5) * 0.35;
+  const scale = motionScale(width);
+  const speed = (2.4 + Math.random() * 1.8) * scale;
+  const angleJitter = (Math.random() - 0.5) * 0.35 * scale;
 
   return {
     x,
@@ -738,7 +812,7 @@ function spawnShootingStar(
     vy: speed * (0.28 + Math.random() * 0.4),
     life: 0,
     maxLife: 0.85 + Math.random() * 0.55,
-    length: 12 + Math.random() * 16,
+    length: (12 + Math.random() * 16) * scale,
   };
 }
 
@@ -775,18 +849,25 @@ function bakeBitmapSky(
 
   for (let y = 0; y < height; y++) {
     const ny = y / Math.max(1, height - 1);
-    const warpWeight = smoothstep(viewportRatio * 0.7, 1, ny);
-    // Keep bitmap strong through most of the sky
+    // Tip sits lower — delay light colors into the dotted cream runway
+    const tipShiftPx = 120;
+    const tipShift = tipShiftPx / Math.max(1, height - 1);
+    const nyLight = Math.max(0, ny - tipShift);
+    // Warp grows so mountain silhouette reads clearly
+    const warpWeight = smootherstep(viewportRatio * 0.45, 1, nyLight) * 1.15;
+    const tipSeal = smootherstep(0.8, 0.995, nyLight);
     const alphaMul =
-      (1 - smoothstep(0.72, 0.97, ny)) * (0.92 + 0.08 * (1 - ny * 0.15));
+      (1 - smootherstep(0.64, 0.96, nyLight)) *
+      (0.94 + 0.06 * (1 - nyLight * 0.12));
 
     for (let x = 0; x < width; x++) {
+      const sampleY = Math.max(0, y - tipShiftPx);
       const flow = sampleField(
         warp.field,
         warp.fw,
         warp.fh,
         x,
-        y,
+        sampleY,
         width,
         height,
       );
@@ -795,13 +876,14 @@ function bakeBitmapSky(
         organic.fw,
         organic.fh,
         x,
-        y,
+        sampleY,
         width,
         height,
       );
+      // Stronger terrain warp — organic mountain silhouette
       const t = Math.min(
         1,
-        Math.max(0, ny + (flow * 0.35 + terrain * 0.25) * warpWeight),
+        Math.max(0, nyLight + (flow * 0.38 + terrain * 0.72) * warpWeight),
       );
       let [r, g, b] = getGradientColor(t, mapped);
 
@@ -810,7 +892,7 @@ function bakeBitmapSky(
         mesh.fw,
         mesh.fh,
         x,
-        y,
+        sampleY,
         width,
         height,
       );
@@ -819,36 +901,52 @@ function bakeBitmapSky(
         mesh.fw,
         mesh.fh,
         x,
-        y,
+        sampleY,
         width,
         height,
       );
-      r = lerp(r, brightCss[0], brightBlob * 0.1);
-      g = lerp(g, brightCss[1], brightBlob * 0.08);
-      b = lerp(b, brightCss[2], brightBlob * 0.12);
-      r = lerp(r, horizonCss[0], cyanBlob * 0.1);
-      g = lerp(g, horizonCss[1], cyanBlob * 0.12);
-      b = lerp(b, horizonCss[2], cyanBlob * 0.08);
-
       const organicWhite = sampleField(
         organic.whiteBlend,
         organic.fw,
         organic.fh,
         x,
-        y,
+        sampleY,
         width,
         height,
       );
-      const toSurface = smoothstep(0.0, 0.95, organicWhite);
-      r = lerp(r, horizonCss[0], toSurface * 0.22 * (1 - toSurface));
-      g = lerp(g, horizonCss[1], toSurface * 0.26 * (1 - toSurface));
-      b = lerp(b, horizonCss[2], toSurface * 0.28 * (1 - toSurface));
-      r = lerp(r, whiteCss[0], toSurface);
-      g = lerp(g, whiteCss[1], toSurface);
-      b = lerp(b, whiteCss[2], toSurface);
 
-      // Full-strength dither — bitmap texture stays obvious
-      const ditherAmt = (0.95 + 0.05 * ny) * (1 - toSurface * 0.88);
+      // Land on page cream, then go fully transparent so CSS floor owns the seal
+      const toSurface = Math.min(
+        1,
+        smootherstep(0.0, 0.92, organicWhite) * 0.72 + tipSeal * 0.55,
+      );
+      const meshAmt = 1 - smootherstep(0, 1, toSurface) * 0.7;
+
+      r = lerp(r, brightCss[0], brightBlob * 0.42 * meshAmt);
+      g = lerp(g, brightCss[1], brightBlob * 0.34 * meshAmt);
+      b = lerp(b, brightCss[2], brightBlob * 0.48 * meshAmt);
+      r = lerp(r, horizonCss[0], cyanBlob * 0.44 * meshAmt);
+      g = lerp(g, horizonCss[1], cyanBlob * 0.5 * meshAmt);
+      b = lerp(b, horizonCss[2], cyanBlob * 0.36 * meshAmt);
+
+      // Natural bridge through horizon before landing on cream
+      const mistBridge = toSurface * (1 - toSurface) * 4;
+      const mistAmt = Math.min(1, mistBridge * 0.42);
+      r = lerp(r, horizonCss[0], mistAmt);
+      g = lerp(g, horizonCss[1], mistAmt);
+      b = lerp(b, horizonCss[2], mistAmt);
+
+      const creamEase = smootherstep(0, 1, toSurface);
+      r = lerp(r, whiteCss[0], creamEase);
+      g = lerp(g, whiteCss[1], creamEase);
+      b = lerp(b, whiteCss[2], creamEase);
+
+      // Kill dither early so tip matches soft ambient mesh
+      const ditherAmt =
+        (0.88 + 0.08 * nyLight) *
+        (1 - creamEase) *
+        (1 - tipSeal) *
+        (1 - smootherstep(0.55, 0.9, nyLight) * 0.5);
       const dr = ditherChannel(r / 255, x, y, levels) * 255;
       const dg = ditherChannel(g / 255, x, y, levels) * 255;
       const db = ditherChannel(b / 255, x, y, levels) * 255;
@@ -857,10 +955,25 @@ function bakeBitmapSky(
       data[idx] = lerp(r, dr, ditherAmt);
       data[idx + 1] = lerp(g, dg, ditherAmt);
       data[idx + 2] = lerp(b, db, ditherAmt);
-      data[idx + 3] = Math.round(255 * alphaMul * (1 - toSurface * 0.75));
+      data[idx + 3] = Math.round(
+        255 * alphaMul * Math.pow(1 - creamEase, 1.35) * (1 - tipSeal * 0.85),
+      );
     }
   }
 
+  return imageData;
+}
+
+/** Flip sky bitmap so cream sits at the top (footer) */
+function flipImageDataVertical(imageData: ImageData) {
+  const { width, height, data } = imageData;
+  const rowBytes = width * 4;
+  const copy = new Uint8ClampedArray(data);
+  for (let y = 0; y < height; y++) {
+    const src = y * rowBytes;
+    const dst = (height - 1 - y) * rowBytes;
+    data.set(copy.subarray(src, src + rowBytes), dst);
+  }
   return imageData;
 }
 
@@ -933,12 +1046,34 @@ function drawStarGlyph(
   ctx: CanvasRenderingContext2D,
   star: Star,
   alpha: number,
+  simpleAmbient = false,
 ) {
   const cx = star.x;
   const cy = star.y;
   const isPlaced = Boolean(star.placed);
   const isHero = Boolean(star.hero) && !isPlaced;
   const spikes = star.points ?? 5;
+
+  // Cheap path for ambient field on weaker devices — still reads as a star
+  if (!isPlaced && simpleAmbient) {
+    const r = isHero ? 1.15 : 0.55 + Math.min(0.35, star.opacity * 0.4);
+    ctx.fillStyle = `rgba(240, 248, 255,${alpha * (isHero ? 0.9 : 0.75)})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    if (isHero || alpha > 0.35) {
+      const len = r * (isHero ? 3.2 : 2.4);
+      ctx.strokeStyle = `rgba(230, 240, 255,${alpha * 0.45})`;
+      ctx.lineWidth = 0.35;
+      ctx.beginPath();
+      ctx.moveTo(cx - len, cy);
+      ctx.lineTo(cx + len, cy);
+      ctx.moveTo(cx, cy - len);
+      ctx.lineTo(cx, cy + len);
+      ctx.stroke();
+    }
+    return;
+  }
 
   // Scale — ambient stays small; placed stars use their randomized size
   const base = isPlaced
@@ -1262,9 +1397,14 @@ function drawPenOverlay(
   }
 }
 
-export default function GalaxyBackground() {
+export default function GalaxyBackground({
+  variant = "hero",
+}: {
+  variant?: GalaxyVariant;
+}) {
   const bitmapRef = useRef<HTMLCanvasElement>(null);
   const starsRef = useRef<HTMLCanvasElement>(null);
+  const isFooter = variant === "footer";
 
   useEffect(() => {
     const bitmapCanvas = bitmapRef.current;
@@ -1282,6 +1422,8 @@ export default function GalaxyBackground() {
     let width = 0;
     let height = 0;
     let viewportBand = 0.55;
+    /** Footer: cream→blue lives above this; stars live below */
+    let starFloor = 0;
     let ambientStars: Star[] = [];
     let placedStars: Star[] = [];
     let shooting: ShootingStar[] = [];
@@ -1304,6 +1446,15 @@ export default function GalaxyBackground() {
     let reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    let quality: SkyQuality = detectSkyQuality();
+    let profile = SKY_QUALITY[quality];
+    let pixelScale = profile.pixelScale;
+    let skyVisible = true;
+    let pageVisible = document.visibilityState === "visible";
+    let frameIndex = 0;
+    let fpsSamples = 0;
+    let fpsAccum = 0;
+    let degradedOnce = false;
 
     const scheduleNextShoot = () => {
       nextShootAt =
@@ -1311,21 +1462,26 @@ export default function GalaxyBackground() {
         Math.random() * SHOOTING_STAR_INTERVAL_JITTER_MS;
     };
 
-    const allStars = () => ambientStars.concat(placedStars);
+    const inStarZone = (y: number) =>
+      isFooter ? y >= starFloor : y <= height * viewportBand;
 
     const rebuild = () => {
+      profile = SKY_QUALITY[quality];
+      pixelScale = profile.pixelScale;
       const host = starsCanvas.parentElement;
       const w = host?.clientWidth || window.innerWidth;
-      const expectedH = Math.round(window.innerHeight * SKY_HEIGHT_VH);
+      const skyVh = isFooter ? FOOTER_SKY_VH : SKY_HEIGHT_VH;
+      const expectedH = Math.round(window.innerHeight * skyVh);
       const hostH = host?.clientHeight ?? 0;
       const h = hostH >= expectedH * 0.85 ? hostH : expectedH;
 
       const prevW = width;
       const prevH = height;
 
-      width = Math.max(1, Math.floor(w / PIXEL_SCALE));
-      height = Math.max(1, Math.floor(h / PIXEL_SCALE));
-      viewportBand = 0.78;
+      width = Math.max(1, Math.floor(w / pixelScale));
+      height = Math.max(1, Math.floor(h / pixelScale));
+      viewportBand = isFooter ? 0.72 : 0.78;
+      starFloor = isFooter ? Math.floor(height * 0.3) : 0;
 
       for (const c of [bitmapCanvas, starsCanvas, galaxyCanvas]) {
         c.width = width;
@@ -1336,18 +1492,22 @@ export default function GalaxyBackground() {
       bitmapCanvas.style.width = `${w}px`;
       bitmapCanvas.style.height = `${h}px`;
 
-      const bitmap = bakeBitmapSky(width, height, resolveSkyStops());
       bitmapCtx.clearRect(0, 0, width, height);
+      // Identical hero bake (same dither amount) — flip for inverted footer
+      const bitmap = bakeBitmapSky(width, height, resolveSkyStops());
+      if (isFooter) flipImageDataVertical(bitmap);
       bitmapCtx.putImageData(bitmap, 0, 0);
 
-      const galaxy = bakeGalaxyOverlay(
-        width,
-        Math.floor(height * viewportBand),
-      );
+      const bandH = Math.floor(height * viewportBand);
+      const galaxy = bakeGalaxyOverlay(width, bandH);
       galaxyBandY = galaxy.bandY;
       galaxyCtx.clearRect(0, 0, width, height);
-      // Place Milky Way texture in the upper sky band
-      galaxyCtx.putImageData(galaxy.image, 0, 0);
+      if (isFooter) {
+        // Seat the Milky Way in the deep lower sky
+        galaxyCtx.putImageData(galaxy.image, 0, starFloor);
+      } else {
+        galaxyCtx.putImageData(galaxy.image, 0, 0);
+      }
 
       // Remap user-placed stars so constellations survive resize
       if (prevW > 0 && prevH > 0) {
@@ -1359,7 +1519,13 @@ export default function GalaxyBackground() {
         }
       }
 
-      ambientStars = generateStars(width, Math.floor(height * viewportBand));
+      const spawnH = isFooter
+        ? Math.max(1, height - starFloor)
+        : Math.floor(height * viewportBand);
+      ambientStars = generateStars(width, spawnH, profile.starDivisor);
+      if (isFooter) {
+        for (const star of ambientStars) star.y += starFloor;
+      }
       shooting = [];
       recentShootOrigins = [];
       shootTimer = 0;
@@ -1406,7 +1572,7 @@ export default function GalaxyBackground() {
     const onPointerMove = (event: MouseEvent) => {
       if (!width || !height) return;
       const { x, y } = canvasPoint(event);
-      const inBand = y <= height * viewportBand;
+      const inBand = inStarZone(y);
       pointer = { x, y, active: inBand };
       const el = starsCanvas.parentElement;
       if (el) el.style.cursor = inBand ? "crosshair" : "";
@@ -1441,7 +1607,7 @@ export default function GalaxyBackground() {
       if (target?.closest("a, button")) return;
 
       const { x, y } = canvasPoint(event);
-      if (y > height * viewportBand) return;
+      if (!inStarZone(y)) return;
 
       // 1) Snap to an existing star — close, join, or continue from it
       const nearest = findNearestStar(placedStars, x, y, STAR_SNAP_PX);
@@ -1515,16 +1681,49 @@ export default function GalaxyBackground() {
     };
 
     const tick = (ts: number) => {
+      raf = requestAnimationFrame(tick);
+
+      // Pause when tabbed away or scrolled off-screen — biggest win on weak CPUs
+      if (!pageVisible || !skyVisible) {
+        lastTs = 0;
+        return;
+      }
+
       const dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
       lastTs = ts;
+      frameIndex += 1;
+
+      // Adaptive degrade: if we sit under ~30fps for a stretch, drop a tier once
+      fpsAccum += dt;
+      fpsSamples += 1;
+      if (fpsSamples >= 45) {
+        const avg = fpsAccum / fpsSamples;
+        fpsAccum = 0;
+        fpsSamples = 0;
+        if (!degradedOnce && avg > 0.033 && quality !== "low") {
+          degradedOnce = true;
+          quality = quality === "high" ? "medium" : "low";
+          document.documentElement.dataset.skyQuality = quality;
+          rebuild();
+          return;
+        }
+      }
+
+      // Drift was tuned per-frame at 60fps — keep it identical on 30/90/120Hz
+      const frameScale = dt * 60;
+      // Reduced motion slows the sky right down rather than freezing it. iOS
+      // and macOS Low Power Mode both report this preference, which otherwise
+      // leaves phones and laptops with a completely dead sky.
+      const motion = reducedMotion ? REDUCED_MOTION_SCALE : 1;
+      const driftScale = frameScale * motion;
+      const drawGalaxyFx = frameIndex % profile.galaxyFxEveryN === 0;
 
       ctx.clearRect(0, 0, width, height);
 
       // Milky Way band — soft horizontal haze behind stars
-      if (!reducedMotion) {
-        galaxyDrift += dt * 0.018;
-      }
+      galaxyDrift += dt * 0.018 * motion;
       const bandH = Math.floor(height * viewportBand);
+      const bandOriginY = isFooter ? starFloor : 0;
       const driftX =
         Math.sin(galaxyDrift * 0.85) * width * 0.008 +
         Math.sin(galaxyDrift * 0.31 + 1.1) * width * 0.004;
@@ -1538,61 +1737,81 @@ export default function GalaxyBackground() {
       ctx.drawImage(galaxyCanvas, 0, 0);
       ctx.restore();
 
-      // Warm core bloom along the band (right-of-center, like the photo)
-      const coreX = width * 0.62 + driftX;
-      const coreY = bandH * galaxyBandY + driftY;
-      const coreBloom = ctx.createRadialGradient(
-        coreX,
-        coreY,
-        0,
-        coreX,
-        coreY,
-        width * 0.28,
-      );
-      coreBloom.addColorStop(0, "rgba(255, 190, 140, 0.045)");
-      coreBloom.addColorStop(0.35, "rgba(220, 120, 180, 0.025)");
-      coreBloom.addColorStop(0.7, "rgba(100, 70, 180, 0.012)");
-      coreBloom.addColorStop(1, "rgba(20, 20, 60, 0)");
-      ctx.fillStyle = coreBloom;
-      ctx.beginPath();
-      ctx.ellipse(coreX, coreY, width * 0.34, bandH * 0.11, -0.08, 0, Math.PI * 2);
-      ctx.fill();
+      if (drawGalaxyFx) {
+        // Warm core bloom along the band (right-of-center, like the photo)
+        const coreX = width * 0.62 + driftX;
+        const coreY = bandOriginY + bandH * galaxyBandY + driftY;
+        const coreBloom = ctx.createRadialGradient(
+          coreX,
+          coreY,
+          0,
+          coreX,
+          coreY,
+          width * 0.28,
+        );
+        coreBloom.addColorStop(0, "rgba(255, 190, 140, 0.045)");
+        coreBloom.addColorStop(0.35, "rgba(220, 120, 180, 0.025)");
+        coreBloom.addColorStop(0.7, "rgba(100, 70, 180, 0.012)");
+        coreBloom.addColorStop(1, "rgba(20, 20, 60, 0)");
+        ctx.fillStyle = coreBloom;
+        ctx.beginPath();
+        ctx.ellipse(
+          coreX,
+          coreY,
+          width * 0.34,
+          bandH * 0.11,
+          -0.08,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
 
-      // Soft violet mist strip across the plane
-      const mist = ctx.createLinearGradient(0, coreY - bandH * 0.14, 0, coreY + bandH * 0.14);
-      mist.addColorStop(0, "rgba(80, 40, 140, 0)");
-      mist.addColorStop(0.5, "rgba(120, 70, 180, 0.02)");
-      mist.addColorStop(1, "rgba(40, 20, 80, 0)");
-      ctx.fillStyle = mist;
-      ctx.fillRect(0, coreY - bandH * 0.14, width, bandH * 0.28);
+        // Soft violet mist strip across the plane
+        const mist = ctx.createLinearGradient(
+          0,
+          coreY - bandH * 0.14,
+          0,
+          coreY + bandH * 0.14,
+        );
+        mist.addColorStop(0, "rgba(80, 40, 140, 0)");
+        mist.addColorStop(0.5, "rgba(120, 70, 180, 0.02)");
+        mist.addColorStop(1, "rgba(40, 20, 80, 0)");
+        ctx.fillStyle = mist;
+        ctx.fillRect(0, coreY - bandH * 0.14, width, bandH * 0.28);
+      }
 
       // Constellation lines behind stars
       drawConstellations(ctx, placedStars);
 
+      // Meteors are the one big, fast motion — skip them under reduced motion
+      const meteorCap = profile.maxMeteors;
       if (!reducedMotion) {
         shootTimer += dt * 1000;
-        if (
-          shootTimer >= nextShootAt &&
-          shooting.length < SHOOTING_STAR_MAX
-        ) {
-          const bandH = Math.floor(height * viewportBand * 1.15);
+        if (shootTimer >= nextShootAt && shooting.length < meteorCap) {
+          const shootBandH = isFooter
+            ? Math.max(1, height - starFloor)
+            : Math.floor(height * viewportBand * 1.15);
+          const shootY0 = isFooter ? starFloor : 0;
           const avoid = recentShootOrigins.concat(
             shooting.map((s) => ({ x: s.x, y: s.y })),
           );
-          const meteor = spawnShootingStar(width, bandH, avoid);
+          const meteor = spawnShootingStar(width, shootBandH, avoid);
+          meteor.y += shootY0;
           shooting.push(meteor);
           recentShootOrigins.push({ x: meteor.x, y: meteor.y });
           if (
+            quality === "high" &&
             Math.random() < 0.28 &&
-            shooting.length < SHOOTING_STAR_MAX
+            shooting.length < meteorCap
           ) {
             const second = spawnShootingStar(
               width,
-              bandH,
+              shootBandH,
               recentShootOrigins.concat(
                 shooting.map((s) => ({ x: s.x, y: s.y })),
               ),
             );
+            second.y += shootY0;
             shooting.push(second);
             recentShootOrigins.push({ x: second.x, y: second.y });
           }
@@ -1602,97 +1821,118 @@ export default function GalaxyBackground() {
           shootTimer = 0;
           scheduleNextShoot();
         }
-
-        const starCeiling = height * viewportBand;
-
-        for (const star of allStars()) {
-          if (!star.placed) {
-            // Float in a soft current — steer toward a slowly evolving heading
-            const phase = star.curvePhase ?? 0;
-            const t = star.twinklePhase;
-            const home = -0.16;
-            const curl =
-              Math.sin(t * 0.11 + phase) * 0.28 +
-              Math.sin(t * 0.047 + phase * 1.4) * 0.16 +
-              Math.sin(t * 0.023 + phase * 0.6) * 0.1;
-            const targetAngle = home + curl;
-            let angle = star.driftAngle ?? home;
-            const steer = Math.min(1, (star.turnSpeed ?? 0.1) * 2.4 * dt);
-            angle += (targetAngle - angle) * steer;
-            star.driftAngle = angle;
-
-            const baseSpeed = star.driftSpeed ?? 0.03;
-            const breathe =
-              0.88 +
-              0.12 * Math.sin(t * 0.07 + phase) +
-              0.05 * Math.sin(t * 0.019 + phase * 2.1);
-            const speed = baseSpeed * breathe;
-            star.vx = Math.cos(angle) * speed;
-            star.vy = Math.sin(angle) * speed * 0.38;
-            star.x += star.vx;
-            star.y += star.vy;
-
-            if (star.x > width + 2) star.x = -2;
-            if (star.x < -2) star.x = width + 2;
-            if (star.y < -2) star.y = starCeiling;
-            if (star.y > starCeiling) star.y = -2;
-          }
-
-          star.twinklePhase += star.twinkleSpeed * dt;
-
-          // Soft, uneven twinkle — closer to real star scintillation
-          const twinkle =
-            0.72 +
-            0.18 * Math.sin(star.twinklePhase) +
-            0.07 * Math.sin(star.twinklePhase * 2.3 + 0.4) +
-            0.03 * Math.sin(star.twinklePhase * 5.1 + 1.2);
-          const alpha = star.opacity * Math.max(0.35, Math.min(1, twinkle));
-          if (alpha > 0.02) drawStarGlyph(ctx, star, alpha);
-        }
-
-        const bandLimit = height * viewportBand * 1.2;
-        for (let i = shooting.length - 1; i >= 0; i--) {
-          const meteor = shooting[i];
-          meteor.life += dt;
-          // Natural arc — slight downward pull as it travels
-          meteor.vy += 0.35 * dt;
-          meteor.x += meteor.vx;
-          meteor.y += meteor.vy;
-          drawShootingStar(ctx, meteor);
-
-          if (
-            meteor.life >= meteor.maxLife ||
-            meteor.x > width + 40 ||
-            meteor.y > bandLimit
-          ) {
-            shooting.splice(i, 1);
-          }
-        }
-
-        drawPenOverlay(ctx, penStar, pathOrigin, strokeLen, pointer);
-      } else {
-        drawConstellations(ctx, placedStars);
-        for (const star of allStars()) {
-          drawStarGlyph(ctx, star, star.opacity);
-        }
-        drawPenOverlay(ctx, penStar, pathOrigin, strokeLen, pointer);
       }
 
-      raf = requestAnimationFrame(tick);
+      const starCeiling = isFooter ? height : height * viewportBand;
+      const starFloorY = isFooter ? starFloor : -2;
+      const simpleAmbient = profile.simpleAmbient;
+
+      const updateAndDraw = (star: Star) => {
+        if (!star.placed) {
+          // Float in a soft current — steer toward a slowly evolving heading
+          const phase = star.curvePhase ?? 0;
+          const t = star.twinklePhase;
+          const home = -0.16;
+          const curl =
+            Math.sin(t * 0.11 + phase) * 0.28 +
+            Math.sin(t * 0.047 + phase * 1.4) * 0.16 +
+            Math.sin(t * 0.023 + phase * 0.6) * 0.1;
+          const targetAngle = home + curl;
+          let angle = star.driftAngle ?? home;
+          const steer = Math.min(1, (star.turnSpeed ?? 0.1) * 2.4 * dt);
+          angle += (targetAngle - angle) * steer;
+          star.driftAngle = angle;
+
+          const baseSpeed = star.driftSpeed ?? 0.03;
+          const breathe =
+            0.88 +
+            0.12 * Math.sin(t * 0.07 + phase) +
+            0.05 * Math.sin(t * 0.019 + phase * 2.1);
+          const speed = baseSpeed * breathe;
+          star.vx = Math.cos(angle) * speed;
+          star.vy = Math.sin(angle) * speed * 0.38;
+          star.x += star.vx * driftScale;
+          star.y += star.vy * driftScale;
+
+          if (star.x > width + 2) star.x = -2;
+          if (star.x < -2) star.x = width + 2;
+          if (star.y < starFloorY) star.y = starCeiling;
+          if (star.y > starCeiling) star.y = starFloorY;
+        }
+
+        star.twinklePhase += star.twinkleSpeed * dt * motion;
+
+        // Soft, uneven twinkle — closer to real star scintillation
+        const twinkle =
+          0.72 +
+          0.18 * Math.sin(star.twinklePhase) +
+          0.07 * Math.sin(star.twinklePhase * 2.3 + 0.4) +
+          0.03 * Math.sin(star.twinklePhase * 5.1 + 1.2);
+        const alpha = star.opacity * Math.max(0.35, Math.min(1, twinkle));
+        if (alpha > 0.02) {
+          drawStarGlyph(ctx, star, alpha, !star.placed && simpleAmbient);
+        }
+      };
+
+      for (const star of ambientStars) updateAndDraw(star);
+      for (const star of placedStars) updateAndDraw(star);
+
+      const bandLimit = isFooter
+        ? height + 40
+        : height * viewportBand * 1.2;
+      for (let i = shooting.length - 1; i >= 0; i--) {
+        const meteor = shooting[i];
+        meteor.life += dt;
+        // Natural arc — slight downward pull as it travels
+        meteor.vy += 0.35 * dt;
+        meteor.x += meteor.vx * frameScale;
+        meteor.y += meteor.vy * frameScale;
+        drawShootingStar(ctx, meteor);
+
+        if (
+          meteor.life >= meteor.maxLife ||
+          meteor.x > width + 40 ||
+          meteor.y > bandLimit ||
+          (isFooter && meteor.y < starFloor - 20)
+        ) {
+          shooting.splice(i, 1);
+        }
+      }
+
+      drawPenOverlay(ctx, penStar, pathOrigin, strokeLen, pointer);
     };
 
     const onMotionChange = (event: MediaQueryListEvent) => {
       reducedMotion = event.matches;
     };
 
+    const onVisibility = () => {
+      pageVisible = document.visibilityState === "visible";
+      if (pageVisible) lastTs = 0;
+    };
+
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     motionQuery.addEventListener("change", onMotionChange);
+    document.addEventListener("visibilitychange", onVisibility);
     const host = starsCanvas.parentElement;
+
+    const io =
+      typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(
+            ([entry]) => {
+              skyVisible = entry.isIntersecting;
+              if (skyVisible) lastTs = 0;
+            },
+            { root: null, threshold: 0.02 },
+          )
+        : null;
+    if (host) io?.observe(host);
 
     let resizeTimer = 0;
     let builtW = window.innerWidth;
     let builtH = window.innerHeight;
 
+    document.documentElement.dataset.skyQuality = quality;
     rebuild();
     builtW = window.innerWidth;
     builtH = window.innerHeight;
@@ -1726,21 +1966,22 @@ export default function GalaxyBackground() {
       window.clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("visibilitychange", onVisibility);
       host?.removeEventListener("click", onClick);
       host?.removeEventListener("dblclick", onDblClick);
       host?.removeEventListener("mousemove", onPointerMove);
       host?.removeEventListener("mouseleave", onPointerLeave);
+      io?.disconnect();
       if (host) host.style.cursor = "";
       motionQuery.removeEventListener("change", onMotionChange);
     };
-  }, []);
+  }, [isFooter]);
 
   return (
     <>
       <canvas
         ref={bitmapRef}
-        className="galaxy-canvas pointer-events-none absolute inset-0 z-[1] h-full w-full"
-        style={{ mixBlendMode: "overlay", opacity: 0.88 }}
+        className="galaxy-canvas galaxy-canvas--bitmap pointer-events-none absolute inset-0 z-[1] h-full w-full"
         aria-hidden="true"
       />
       <canvas

@@ -3,17 +3,14 @@ import SkyShape from "./SkyShape";
 
 const navLinks = ["Work", "Gaming", "About"];
 
-// Sky gradient taller than one screen — organic fade further down
-export const HERO_VH = 175;
+// Same sky style as before — ends sooner (cream tip higher)
+export const HERO_VH = 140;
 
 export default function Hero() {
   return (
     <section
-      className="relative w-full overflow-x-clip text-white"
-      style={{
-        height: `${HERO_VH}vh`,
-        backgroundColor: "var(--surface)",
-      }}
+      className="hero relative w-full overflow-x-clip text-white"
+      style={{ height: `calc(${HERO_VH}vh + var(--sky-tip-offset))` }}
     >
       <SkyShape />
       <GalaxyBackground />
@@ -38,11 +35,12 @@ export default function Hero() {
         </header>
 
         <main className="flex flex-1 flex-col items-center justify-center px-[var(--page-gutter)] text-center">
-          <h1 className="text-h1 whitespace-nowrap">
-            Tiniest details make the biggest difference
+          <h1 className="text-h1">
+            Tiniest details make the
+            <br />
+            biggest difference
           </h1>
           <div className="text-h3 mt-5">
-            <p>Duaa Suhail</p>
             <p>designing for creators</p>
           </div>
         </main>
@@ -51,9 +49,11 @@ export default function Hero() {
           className="page-shell flex items-end justify-between"
           style={{ paddingBottom: "var(--hero-footer-bottom)" }}
         >
-          <div className="text-body max-w-[315px]">
-            <p>The more stars the more beautiful the sky becomes</p>
-            <p>Click to draw · close on the first star · Esc to lift</p>
+          <div className="text-body max-w-[360px]">
+            <p className="whitespace-nowrap">
+              The more stars the more beautiful the sky becomes
+            </p>
+            <p>Draw your own constellations.</p>
           </div>
           <p className="text-body max-w-[248px] text-right">
             Learn more about my design philosophy
