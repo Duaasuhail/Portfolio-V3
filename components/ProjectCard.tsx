@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 type ProjectCardProps = {
@@ -53,20 +54,22 @@ export function CtrlvoxCard() {
 
 export function DsaCard() {
   return (
-    <ProjectCard
-      title="DSA 2026-2027 Branding"
-      tags="Brand Strategy | System Thinking | Shipped"
-      description="Creating a digital presence for an invisible product."
-    >
-      <div className="project-media project-media--dsa absolute inset-0">
-        <Image
-          src="/projects/dsa-cover.png"
-          alt="dsa"
-          fill
-          sizes="(max-width: 1024px) 100vw, 674px"
-          className="object-cover"
-        />
-      </div>
-    </ProjectCard>
+    <Link href="/work/dsa-branding" className="block transition-opacity hover:opacity-80">
+      <ProjectCard
+        title="DSA 2026-2027 Branding"
+        tags="Brand Strategy | System Thinking | Shipped"
+        description="Creating a digital presence for an invisible product."
+      >
+        <div className="project-media project-media--dsa absolute inset-0">
+          <Image
+            src="/projects/dsa-cover.png"
+            alt="DSA 2026-2027 Branding"
+            fill
+            sizes="(max-width: 1024px) 100vw, 674px"
+            className="object-cover"
+          />
+        </div>
+      </ProjectCard>
+    </Link>
   );
 }
