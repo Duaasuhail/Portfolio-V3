@@ -1,58 +1,147 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef } from "react";
 import { detectSkyQuality, SKY_QUALITY } from "@/lib/skyQuality";
 
-const DRIFT_DEFAULTS = {
-  "--drift-x1": "0%",
-  "--drift-y1": "0%",
-  "--drift-x2": "0%",
-  "--drift-y2": "0%",
-  "--drift-x3": "0%",
-  "--drift-y3": "0%",
-  "--drift-hx": "0%",
-  "--drift-hy": "0%",
-  "--flare-x1": "20%",
-  "--flare-y1": "12%",
-  "--flare-x2": "65%",
-  "--flare-y2": "16%",
-  "--flare-x3": "42%",
-  "--flare-y3": "24%",
-  "--flare-x4": "80%",
-  "--flare-y4": "8%",
-  "--flare-x5": "30%",
-  "--flare-y5": "20%",
-  "--flare-o1": "0.4",
-  "--flare-o2": "0.35",
-  "--flare-o3": "0.45",
-  "--flare-o4": "0.3",
-  "--flare-o5": "0.4",
-} as CSSProperties;
+const COLOR_FALLBACKS: Record<string, [number, number, number]> = {
+  "--sky-deep": [0, 0, 22],
+  "--sky-midnight": [0, 6, 57],
+  "--sky-royal": [0, 2, 117],
+  "--sky-bright": [4, 107, 236],
+  "--sky-horizon": [124, 206, 253],
+};
 
-/**
- * Soft ambient sky — radial mesh + organic edge.
- * Tip hills sit above the galaxy bitmap so the organic mesh edge reads.
- * Footer variant flips the hero sky (cream → blue → deep).
- */
+function hexToRgb(hex: string): [number, number, number] | null {
+  const cleaned = hex.trim().replace("#", "");
+  if (cleaned.length !== 6) return null;
+  const r = Number.parseInt(cleaned.slice(0, 2), 16);
+  const g = Number.parseInt(cleaned.slice(2, 4), 16);
+  const b = Number.parseInt(cleaned.slice(4, 6), 16);
+  if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+  return [r, g, b];
+}
+
+function resolveColor(cssVar: string): [number, number, number] {
+  if (typeof document === "undefined") return COLOR_FALLBACKS[cssVar];
+  const val = getComputedStyle(document.documentElement).getPropertyValue(cssVar);
+  return hexToRgb(val) ?? COLOR_FALLBACKS[cssVar];
+}
+
+interface MeshVertex {
+  u: number;
+  v: number;
+  baseColor: [number, number, number];
+  freqX: number;
+  freqY: number;
+  ampX: number;
+  ampY: number;
+  phase: number;
+}
+
+interface StarNode {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  primarySpeed: number;
+  shimmerSpeed: number;
+  phase: number;
+  maxAlpha: number;
+}
+
 export default function SkyShape({
   variant = "hero",
 }: {
   variant?: "hero" | "footer";
 }) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const tipRef = useRef<HTMLDivElement>(null);
+  const meshCanvasRef = useRef<HTMLCanvasElement>(null);
+  const starCanvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isFooter = variant === "footer";
 
   useEffect(() => {
-    const root = rootRef.current;
-    const tip = tipRef.current;
-    if (!root) return;
+    const meshCanvas = meshCanvasRef.current;
+    const starCanvas = starCanvasRef.current;
+    const container = containerRef.current;
+    if (!meshCanvas || !starCanvas || !container) return;
 
-    const targets = [root, tip].filter(Boolean) as HTMLDivElement[];
+    const mCtx = meshCanvas.getContext("2d", { alpha: false });
+    const sCtx = starCanvas.getContext("2d", { alpha: true });
+    if (!mCtx || !sCtx) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const quality = detectSkyQuality();
-    document.documentElement.dataset.skyQuality = quality;
     const minInterval = 1000 / SKY_QUALITY[quality].skyFps;
+
+    // Buffer resolution for the blurred background mesh
+    const MW = 280;
+    const MH = 160;
+    meshCanvas.width = MW;
+    meshCanvas.height = MH;
+
+    // Crisp overlay resolution for stars
+    let SW = (starCanvas.width = container.clientWidth || 1200);
+    let SH = (starCanvas.height = container.clientHeight || 700);
+
+    const onResize = () => {
+      if (!container || !starCanvas) return;
+      SW = starCanvas.width = container.clientWidth;
+      SH = starCanvas.height = container.clientHeight;
+    };
+    window.addEventListener("resize", onResize);
+
+    const deep = resolveColor("--sky-deep");
+    const midnight = resolveColor("--sky-midnight");
+    const royal = resolveColor("--sky-royal");
+    const bright = resolveColor("--sky-bright");
+    const horizon = resolveColor("--sky-horizon");
+
+    // 1. Mesh Lattice Setup
+    const COLS = 4;
+    const ROWS = 4;
+    const grid: MeshVertex[][] = [];
+
+    const colorLattice: [number, number, number][][] = [
+      [deep, midnight, royal, deep],
+      [royal, deep, midnight, bright],
+      [bright, midnight, deep, horizon],
+      [midnight, royal, midnight, deep],
+    ];
+
+    for (let r = 0; r < ROWS; r++) {
+      grid[r] = [];
+      for (let c = 0; c < COLS; c++) {
+        grid[r][c] = {
+          u: c / (COLS - 1),
+          v: r / (ROWS - 1),
+          baseColor: colorLattice[r][c],
+          freqX: 0.12 + Math.random() * 0.18,
+          freqY: 0.10 + Math.random() * 0.16,
+          ampX: c === 0 || c === COLS - 1 ? 0.015 : 0.06,
+          ampY: r === 0 || r === ROWS - 1 ? 0.015 : 0.06,
+          phase: Math.random() * Math.PI * 2,
+        };
+      }
+    }
+
+    // 2. Small, Crisp White Starfield (Isolated without connection lines)
+    const STAR_COUNT = 38;
+    const stars: StarNode[] = [];
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random() * SW,
+        y: Math.random() * SH,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.12,
+        radius: 0.5 + Math.random() * 0.45,
+        primarySpeed: 1.4 + Math.random() * 2.0,
+        shimmerSpeed: 4.0 + Math.random() * 4.5,
+        phase: Math.random() * Math.PI * 2,
+        maxAlpha: 0.55 + Math.random() * 0.35,
+      });
+    }
 
     let raf = 0;
     let last = performance.now();
@@ -61,85 +150,80 @@ export default function SkyShape({
     let visible = true;
     let pageVisible = document.visibilityState === "visible";
 
-    const bloom = (nowT: number, a: number, b: number, c: number, bias: number) => {
-      const pulse =
-        0.42 +
-        0.28 * Math.sin(nowT * a + bias) +
-        0.18 * Math.sin(nowT * b + bias * 1.7) +
-        0.12 * Math.sin(nowT * c + bias * 0.4);
-      return Math.max(0.08, Math.min(0.95, pulse)).toFixed(3);
+    // Draw background organic mesh
+    const drawMesh = (time: number) => {
+      mCtx.fillStyle = `rgb(${deep.join(",")})`;
+      mCtx.fillRect(0, 0, MW, MH);
+
+      const points: { x: number; y: number; c: [number, number, number] }[][] = [];
+      for (let r = 0; r < ROWS; r++) {
+        points[r] = [];
+        for (let c = 0; c < COLS; c++) {
+          const pt = grid[r][c];
+          const curU = pt.u + Math.sin(time * pt.freqX + pt.phase) * pt.ampX;
+          const curV = pt.v + Math.cos(time * pt.freqY + pt.phase) * pt.ampY;
+
+          points[r][c] = {
+            x: curU * MW,
+            y: curV * MH,
+            c: pt.baseColor,
+          };
+        }
+      }
+
+      for (let r = 0; r < ROWS - 1; r++) {
+        for (let c = 0; c < COLS - 1; c++) {
+          const p00 = points[r][c];
+          const p10 = points[r][c + 1];
+          const p01 = points[r + 1][c];
+          const p11 = points[r + 1][c + 1];
+
+          const grad = mCtx.createLinearGradient(p00.x, p00.y, p11.x, p11.y);
+          grad.addColorStop(0, `rgb(${p00.c.join(",")})`);
+          grad.addColorStop(0.35, `rgb(${p10.c.join(",")})`);
+          grad.addColorStop(0.7, `rgb(${p01.c.join(",")})`);
+          grad.addColorStop(1, `rgb(${p11.c.join(",")})`);
+
+          mCtx.fillStyle = grad;
+          mCtx.beginPath();
+          mCtx.moveTo(p00.x, p00.y);
+          mCtx.lineTo(p10.x, p10.y);
+          mCtx.lineTo(p11.x, p11.y);
+          mCtx.lineTo(p01.x, p01.y);
+          mCtx.closePath();
+          mCtx.fill();
+        }
+      }
     };
 
-    const setAll = (name: string, value: string) => {
-      for (const el of targets) el.style.setProperty(name, value);
-    };
+    // Draw standalone twinkling white stars
+    const drawStars = (time: number, dt: number) => {
+      sCtx.clearRect(0, 0, SW, SH);
 
-    const paint = (nowT: number) => {
-      const mx1 = Math.sin(nowT * 0.11) * 5.5 + Math.sin(nowT * 0.037 + 0.8) * 2.2;
-      const my1 = Math.cos(nowT * 0.09) * 4.5 + Math.cos(nowT * 0.029 + 1.2) * 1.8;
-      const mx2 = Math.cos(nowT * 0.085 + 1.2) * 6 + Math.sin(nowT * 0.033 + 2.1) * 2.5;
-      const my2 = Math.sin(nowT * 0.12 + 0.4) * 5 + Math.cos(nowT * 0.041 + 0.6) * 2;
-      const mx3 = Math.sin(nowT * 0.07 + 2.1) * 4.5 + Math.cos(nowT * 0.026 + 3.4) * 2;
-      const my3 = Math.cos(nowT * 0.1 + 1.7) * 6 + Math.sin(nowT * 0.035 + 1.1) * 2.2;
-      const hx = Math.sin(nowT * 0.06 + 0.8) * 6.5 + Math.sin(nowT * 0.022 + 2.5) * 2.8;
-      const hy = Math.cos(nowT * 0.05 + 0.3) * 3.5 + Math.cos(nowT * 0.019 + 0.9) * 1.5;
+      const speedFactor = reduced.matches ? 0.2 : 1.0;
 
-      setAll("--drift-x1", `${mx1.toFixed(2)}%`);
-      setAll("--drift-y1", `${my1.toFixed(2)}%`);
-      setAll("--drift-x2", `${mx2.toFixed(2)}%`);
-      setAll("--drift-y2", `${my2.toFixed(2)}%`);
-      setAll("--drift-x3", `${mx3.toFixed(2)}%`);
-      setAll("--drift-y3", `${my3.toFixed(2)}%`);
-      setAll("--drift-hx", `${hx.toFixed(2)}%`);
-      setAll("--drift-hy", `${hy.toFixed(2)}%`);
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        s.x += s.vx * speedFactor * (dt * 60);
+        s.y += s.vy * speedFactor * (dt * 60);
 
-      // Flares only on the deep sky stack
-      root.style.setProperty(
-        "--flare-x1",
-        `${(18 + Math.sin(nowT * 0.055 + 0.3) * 16 + Math.cos(nowT * 0.021) * 6).toFixed(2)}%`,
-      );
-      root.style.setProperty(
-        "--flare-y1",
-        `${(8 + Math.cos(nowT * 0.048 + 1.1) * 7 + Math.sin(nowT * 0.017) * 3).toFixed(2)}%`,
-      );
-      root.style.setProperty(
-        "--flare-x2",
-        `${(62 + Math.cos(nowT * 0.05 + 2.4) * 18 + Math.sin(nowT * 0.023) * 5).toFixed(2)}%`,
-      );
-      root.style.setProperty(
-        "--flare-y2",
-        `${(14 + Math.sin(nowT * 0.058 + 0.6) * 9 + Math.cos(nowT * 0.019) * 3.5).toFixed(2)}%`,
-      );
-      root.style.setProperty(
-        "--flare-x3",
-        `${(40 + Math.sin(nowT * 0.042 + 4.2) * 20 + Math.cos(nowT * 0.028) * 5).toFixed(2)}%`,
-      );
-      root.style.setProperty(
-        "--flare-y3",
-        `${(22 + Math.cos(nowT * 0.046 + 2.8) * 10 + Math.sin(nowT * 0.016) * 3).toFixed(2)}%`,
-      );
-      root.style.setProperty(
-        "--flare-x4",
-        `${(78 + Math.cos(nowT * 0.044 + 1.7) * 14 + Math.sin(nowT * 0.031) * 6).toFixed(2)}%`,
-      );
-      root.style.setProperty(
-        "--flare-y4",
-        `${(6 + Math.sin(nowT * 0.052 + 3.5) * 6 + Math.cos(nowT * 0.02) * 2.5).toFixed(2)}%`,
-      );
-      root.style.setProperty(
-        "--flare-x5",
-        `${(28 + Math.sin(nowT * 0.038 + 5.1) * 15 + Math.cos(nowT * 0.025) * 7).toFixed(2)}%`,
-      );
-      root.style.setProperty(
-        "--flare-y5",
-        `${(18 + Math.cos(nowT * 0.056 + 0.9) * 8 + Math.sin(nowT * 0.018) * 3).toFixed(2)}%`,
-      );
+        if (s.x < 0) s.x = SW;
+        else if (s.x > SW) s.x = 0;
+        if (s.y < 0) s.y = SH;
+        else if (s.y > SH) s.y = 0;
 
-      root.style.setProperty("--flare-o1", bloom(nowT, 0.09, 0.05, 0.028, 0.2));
-      root.style.setProperty("--flare-o2", bloom(nowT, 0.075, 0.11, 0.035, 1.4));
-      root.style.setProperty("--flare-o3", bloom(nowT, 0.06, 0.1, 0.025, 2.8));
-      root.style.setProperty("--flare-o4", bloom(nowT, 0.1, 0.055, 0.04, 4.1));
-      root.style.setProperty("--flare-o5", bloom(nowT, 0.08, 0.07, 0.03, 5.6));
+        // Twinkle equation combining primary and shimmer frequencies
+        const primary = 0.5 + 0.5 * Math.sin(time * s.primarySpeed + s.phase);
+        const shimmer = 0.5 + 0.5 * Math.sin(time * s.shimmerSpeed + s.phase * 1.5);
+        const combined = Math.pow(primary * 0.7 + shimmer * 0.3, 2.6);
+        const alpha = s.maxAlpha * (0.05 + 0.95 * combined);
+
+        // Small, crisp pure white star
+        sCtx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        sCtx.beginPath();
+        sCtx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        sCtx.fill();
+      }
     };
 
     const tick = (now: number) => {
@@ -149,13 +233,16 @@ export default function SkyShape({
         return;
       }
 
-      const scale = reduced.matches ? 0.15 : 1;
-      t += (now - last) * 0.001 * scale;
+      const delta = Math.min((now - last) * 0.001, 0.1);
+      const scale = reduced.matches ? 0.2 : 1;
+      t += delta * scale;
       last = now;
 
       if (now - lastPaint < minInterval) return;
       lastPaint = now;
-      paint(t);
+
+      drawMesh(t);
+      drawStars(t, delta);
     };
 
     const onVisibility = () => {
@@ -174,51 +261,43 @@ export default function SkyShape({
             { threshold: 0.02 },
           )
         : null;
-    io?.observe(root);
+    io?.observe(container);
 
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
       io?.disconnect();
     };
   }, []);
 
-  const footer = variant === "footer";
-
   return (
-    <>
-      <div
-        ref={rootRef}
-        className={
-          footer
-            ? "sky-ambient sky-ambient--footer pointer-events-none absolute inset-0 z-0 overflow-hidden"
-            : "sky-ambient pointer-events-none absolute inset-0 z-0 overflow-hidden"
-        }
-        style={DRIFT_DEFAULTS}
-        aria-hidden="true"
-      >
-        <div className="sky-layer sky-layer--base" />
-        <div className="sky-layer sky-layer--mesh" />
-        <div className="sky-layer sky-layer--flare" />
-      </div>
-      {/* Above bitmap — organic mesh hills at the end of the gradient */}
-      <div
-        ref={tipRef}
-        className={
-          footer
-            ? "sky-ambient sky-ambient--footer sky-ambient--tip pointer-events-none absolute inset-0 z-[3] overflow-hidden"
-            : "sky-ambient sky-ambient--tip pointer-events-none absolute inset-0 z-[3] overflow-hidden"
-        }
-        style={DRIFT_DEFAULTS}
-        aria-hidden="true"
-      >
-        <div className="sky-layer sky-layer--hills" />
-        <div className="sky-layer sky-layer--mounds" />
-        <div className="sky-layer sky-layer--crest" />
-        <div className="sky-layer sky-layer--floor" />
-        <div className="sky-layer sky-layer--runway" />
-      </div>
-    </>
+    <div
+      ref={containerRef}
+      className={`pointer-events-none absolute inset-0 z-0 overflow-hidden ${
+        isFooter ? "rotate-180" : ""
+      }`}
+      style={{
+        maskImage:
+          "linear-gradient(180deg, black 0%, black 50%, rgba(0,0,0,0.6) 75%, transparent 95%)",
+        WebkitMaskImage:
+          "linear-gradient(180deg, black 0%, black 50%, rgba(0,0,0,0.6) 75%, transparent 95%)",
+      }}
+      aria-hidden="true"
+    >
+      {/* Background organic blurred color mesh */}
+      <canvas
+        ref={meshCanvasRef}
+        className="absolute inset-0 h-full w-full object-cover blur-[45px] scale-110"
+        style={{ imageRendering: "auto" }}
+      />
+
+      {/* Crisp foreground twinkling stars */}
+      <canvas
+        ref={starCanvasRef}
+        className="absolute inset-0 h-full w-full pointer-events-none z-[1]"
+      />
+    </div>
   );
 }

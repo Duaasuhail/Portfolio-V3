@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+
+
 :root {
   /* Galaxy palette — royal #000275 is the main blue */
   --sky-deep: #000016;
@@ -216,7 +218,81 @@ body {
     padding-top: 36vh;
   }
 }
+/* 1. Base Gradient Canvas */
+.sky-layer--base {
+  background: linear-gradient(
+    180deg,
+    var(--sky-deep, #000016) 0%,
+    var(--sky-midnight, #000639) 45%,
+    var(--sky-royal, #000275) 80%,
+    transparent 100%
+  ) !important;
+  opacity: 1 !important;
+}
 
+/* 2. Interlocking Dark Pockets & Bright Gas Clouds */
+.sky-layer--mesh {
+  background:
+    /* Localized dark space shadow directly behind the center copy */
+    radial-gradient(
+      ellipse 48% 28% at calc(50% + var(--drift-hx)) calc(50% + var(--drift-hy)),
+      var(--sky-deep, #000016) 0%,
+      var(--sky-midnight, #000639) 60%,
+      transparent 85%
+    ),
+    /* Radiant cyan/bright light bloom on the upper-left flank */
+    radial-gradient(
+      ellipse 38% 30% at calc(25% + var(--drift-x1)) calc(38% + var(--drift-y1)),
+      var(--sky-horizon, #7ccefd) 0%,
+      var(--sky-bright, #046bec) 45%,
+      transparent 75%
+    ),
+    /* Radiant electric blue bloom on the right flank */
+    radial-gradient(
+      ellipse 42% 32% at calc(75% + var(--drift-x2)) calc(55% + var(--drift-y2)),
+      var(--sky-bright, #046bec) 0%,
+      var(--sky-royal, #000275) 50%,
+      transparent 75%
+    ),
+    /* Secondary deep navy pocket framing the top right */
+    radial-gradient(
+      ellipse 50% 35% at calc(85% + var(--drift-x3)) calc(22% + var(--drift-y3)),
+      var(--sky-deep, #000016) 0%,
+      var(--sky-midnight, #000639) 55%,
+      transparent 80%
+    ) !important;
+  opacity: 0.95 !important;
+}
+
+/* 3. Luminous Filament & Core Accents (Screen Blended) */
+.sky-layer--flare {
+  background:
+    /* Bright starlight pocket curling left of the title */
+    radial-gradient(
+      ellipse 22% 16% at var(--flare-x1) var(--flare-y1),
+      var(--sky-horizon, #7ccefd) 0%,
+      var(--sky-bright, #046bec) 45%,
+      transparent 75%
+    ),
+    /* Bright starlight pocket curving right of the title */
+    radial-gradient(
+      ellipse 24% 18% at var(--flare-x2) var(--flare-y2),
+      var(--sky-horizon, #7ccefd) 0%,
+      var(--sky-bright, #046bec) 50%,
+      transparent 80%
+    ),
+    /* Glowing crest cloud underneath the text */
+    radial-gradient(
+      ellipse 34% 18% at calc(50% + var(--drift-x2)) calc(64% + var(--drift-y2)),
+      var(--sky-bright, #046bec) 0%,
+      var(--sky-royal, #000275) 55%,
+      transparent 80%
+    ) !important;
+  mix-blend-mode: screen !important;
+  opacity: 0.85 !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
 .hero {
   background-color: var(--surface);
 }

@@ -36,8 +36,7 @@ export default function Hero() {
 
         <main className="flex flex-1 flex-col items-center justify-center px-[var(--page-gutter)] text-center">
           <h1 className="text-h1">
-            Tiniest details make the
-            <br />
+            Tiniest details    <br />make the
             biggest difference
           </h1>
           <div className="text-h3 mt-5">
