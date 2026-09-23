@@ -103,41 +103,37 @@ export default function DsaBrandingCaseStudy() {
                           Design Student Association 2026 - 2027 Rebrand
                         </p>
                         <div className="case-study-meta">
-                          <div className="case-study-meta-col">
-                            <div className="case-study-meta-item">
-                              <h2 className="case-study-h2 case-study-h2--meta">
-                                Role
-                              </h2>
-                              <p className="case-study-copy case-study-copy--muted">
-                                Branding Coordinator &amp; Marketing Director
-                              </p>
-                            </div>
-                            <div className="case-study-meta-item">
-                              <h2 className="case-study-h2 case-study-h2--meta">
-                                Tools
-                              </h2>
-                              <p className="case-study-copy case-study-copy--muted">
-                                Figma, After Effects, Illustrator
-                              </p>
-                            </div>
+                          <div className="case-study-meta-item">
+                            <h2 className="case-study-h2 case-study-h2--meta">
+                              Role
+                            </h2>
+                            <p className="case-study-copy case-study-copy--muted">
+                              Branding Coordinator &amp; Marketing Director
+                            </p>
                           </div>
-                          <div className="case-study-meta-col">
-                            <div className="case-study-meta-item">
-                              <h2 className="case-study-h2 case-study-h2--meta">
-                                Timeline
-                              </h2>
-                              <p className="case-study-copy case-study-copy--muted">
-                                June - July 2026 (1 week)
-                              </p>
-                            </div>
-                            <div className="case-study-meta-item">
-                              <h2 className="case-study-h2 case-study-h2--meta">
-                                Disciplines
-                              </h2>
-                              <p className="case-study-copy case-study-copy--muted">
-                                Brand Strategy, Visual Identity, Iconography,
-                              </p>
-                            </div>
+                          <div className="case-study-meta-item">
+                            <h2 className="case-study-h2 case-study-h2--meta">
+                              Timeline
+                            </h2>
+                            <p className="case-study-copy case-study-copy--muted">
+                              June - July 2026 (1 week)
+                            </p>
+                          </div>
+                          <div className="case-study-meta-item">
+                            <h2 className="case-study-h2 case-study-h2--meta">
+                              Disciplines
+                            </h2>
+                            <p className="case-study-copy case-study-copy--muted">
+                              Brand Strategy, Visual Identity, Iconography,
+                            </p>
+                          </div>
+                          <div className="case-study-meta-item">
+                            <h2 className="case-study-h2 case-study-h2--meta">
+                              Tools
+                            </h2>
+                            <p className="case-study-copy case-study-copy--muted">
+                              Figma, After Effects, Illustrator
+                            </p>
                           </div>
                         </div>
                       </div>
