@@ -963,16 +963,18 @@ html[data-sky-quality="low"] .sky-layer--flare {
 }
 
 .case-study-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.case-study-visual-info,
+.case-study-visual-media {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   align-items: start;
-}
-
-.case-study-visual-col {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
 }
 
 .case-study-visual-copy {
@@ -981,11 +983,11 @@ html[data-sky-quality="low"] .sky-layer--flare {
   gap: 12px;
 }
 
-.case-study-visual-col--left .case-study-visual-copy {
+.case-study-visual-copy--left {
   padding-left: var(--page-gutter);
 }
 
-.case-study-visual-col--right .case-study-visual-copy {
+.case-study-visual-copy--right {
   padding-right: var(--page-gutter);
 }
 
@@ -1203,7 +1205,8 @@ html[data-sky-quality="low"] .sky-layer--flare {
   }
 
   .case-study-split,
-  .case-study-visual,
+  .case-study-visual-info,
+  .case-study-visual-media,
   .case-study-principle,
   .case-study-principle--flip,
   .case-study-reflections-media,
@@ -1215,7 +1218,7 @@ html[data-sky-quality="low"] .sky-layer--flare {
     padding-right: var(--page-gutter);
   }
 
-  .case-study-visual-col--right .case-study-visual-copy {
+  .case-study-visual-copy--right {
     padding-left: var(--page-gutter);
   }
 

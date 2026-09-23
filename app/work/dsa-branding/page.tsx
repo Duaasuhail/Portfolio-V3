@@ -448,8 +448,8 @@ export default function DsaBrandingCaseStudy() {
             </div>
 
             <section className="case-study-visual">
-              <div className="case-study-visual-col case-study-visual-col--left">
-                <div className="case-study-visual-copy">
+              <div className="case-study-visual-info">
+                <div className="case-study-visual-copy case-study-visual-copy--left">
                   <h2 className="case-study-h2">
                     The connected wordmark (homage to our old sister program):
                   </h2>
@@ -460,15 +460,7 @@ export default function DsaBrandingCaseStudy() {
                     and bridging students to industry.
                   </p>
                 </div>
-                <CaseImage
-                  src="/projects/dsa/connected-wordmark.png"
-                  alt="Connected DSA wordmark on a blue grid with flower motifs"
-                  className="case-study-media--visual"
-                  sizes="(max-width: 1024px) 100vw, 746px"
-                />
-              </div>
-              <div className="case-study-visual-col case-study-visual-col--right">
-                <div className="case-study-visual-copy">
+                <div className="case-study-visual-copy case-study-visual-copy--right">
                   <h2 className="case-study-h2">
                     Nostalgic vibes blending with clean UX:
                   </h2>
@@ -479,6 +471,14 @@ export default function DsaBrandingCaseStudy() {
                     moving the DSA towards the future.
                   </p>
                 </div>
+              </div>
+              <div className="case-study-visual-media">
+                <CaseImage
+                  src="/projects/dsa/connected-wordmark.png"
+                  alt="Connected DSA wordmark on a blue grid with flower motifs"
+                  className="case-study-media--visual"
+                  sizes="(max-width: 1024px) 100vw, 746px"
+                />
                 <CaseImage
                   src="/projects/dsa/instagram-mockups.png"
                   alt="DSA Instagram post mockups on a phone and in a browser"
