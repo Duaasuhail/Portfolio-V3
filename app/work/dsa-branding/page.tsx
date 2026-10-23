@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "DSA 2026–2027 Branding — Duaa Suhail",
+  title: "DSA 26/27 Branding — Duaa Suhail",
   description:
     "A one-week visual identity, narrative, and design system for York University’s Design Students’ Association.",
 };
@@ -78,14 +78,11 @@ export default function DsaBrandingCaseStudy() {
                         </h1>
                         <div className="case-study-copy case-study-copy--muted">
                           <p>
-                            With a sudden team change leaving the DSA without a
-                            new brand identity a week before launch, I took the
-                            initiative and task to create a full visual
-                            identity, narrative, and design system from scratch.
+With a sudden team change leaving the DSA without a new brand identity a week before launch, I took the initiative and took on the task of creating a full visual identity, narrative, and design system from scratch.
                           </p>
                           <p className="mt-[22.5px]">
-                            I did a branding project with the mind of a product
-                            designer.
+I did a branding project with a product designer mindset. 
+
                           </p>
                         </div>
                       </div>
@@ -451,7 +448,7 @@ export default function DsaBrandingCaseStudy() {
               <div className="case-study-visual-info">
                 <div className="case-study-visual-copy case-study-visual-copy--left">
                   <h2 className="case-study-h2">
-                    The connected wordmark (homage to our old sister program):
+                    The connected wordmark paying homage to our old sister program
                   </h2>
                   <p className="case-study-copy case-study-copy--muted">
                     DSA hasn’t used a physically connected wordmark since 2010.
@@ -501,7 +498,7 @@ export default function DsaBrandingCaseStudy() {
             <p className="case-study-label">Brand System</p>
             <h2 className="case-study-h2">
               I wanted the brand to work as a supportive internal design system
-              that offers both nostalgic playfulness and systemic support:
+              that offers both nostalgic playfulness and systemic support
             </h2>
           </div>
 
@@ -511,11 +508,11 @@ export default function DsaBrandingCaseStudy() {
                 <p>Nostalgic Playfulness</p>
                 <ul>
                   <li>
-                    Disarms imposter syndrome: Evokes the uninhibited freedom of
+                    Evokes the uninhibited freedom of
                     childhood art-making to make design feel accessible again.
                   </li>
                   <li>
-                    An open invitation to play: Creates a judgment-free
+                    Creates a judgment-free
                     foundation where beginners and seniors alike can experiment
                     freely.
                   </li>
@@ -540,11 +537,11 @@ export default function DsaBrandingCaseStudy() {
               </div>
               <div className="case-study-principle-copy case-study-copy case-study-copy--muted">
                 <p>Systematic Use</p>
-                <p>
-                  Reusable tokens and modular kits turn layout creation into a
-                  fast drag-and-drop workflow. Cutting doen time taken to create
-                  posts by 80%.
-                </p>
+                <ul>
+                  <li>
+                    Reusable tokens and modular kits turn layout creation into a fast drag-and-drop workflow. Cutting down time taken to create posts by <b>90%</b>.
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
