@@ -863,18 +863,29 @@ html[data-sky-quality="low"] .sky-layer--flare {
   gap: 24px;
 }
 
+.case-study-discovery {
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  width: 100%;
+}
+
 .case-study-audience {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-left: var(--page-gutter);
+  padding-inline: var(--page-gutter);
+}
+
+.case-study-audience--student {
+  gap: 18px;
 }
 
 .case-study-audience-intro {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 674px;
+  width: 100%;
 }
 
 .case-study-audience-desc {
@@ -885,11 +896,10 @@ html[data-sky-quality="low"] .sky-layer--flare {
 
 .case-study-split {
   display: grid;
-  grid-template-columns: minmax(0, 674fr) minmax(0, 746fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   align-items: start;
   width: 100%;
-  padding-right: 0;
 }
 
 .case-study-photo {
@@ -918,26 +928,26 @@ html[data-sky-quality="low"] .sky-layer--flare {
   color: var(--greyscale-500);
 }
 
-.case-study-lists--industry li {
-  color: var(--case-meta);
-}
-
 .case-study-values {
   display: flex;
   flex-direction: column;
   gap: 37px;
+  padding-inline: var(--page-gutter);
 }
 
-.case-study-values-grid {
+.case-study-values-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.case-study-values-copy-row,
+.case-study-values-photos {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
-}
-
-.case-study-value {
-  display: flex;
-  flex-direction: column;
-  gap: 21px;
+  width: 100%;
 }
 
 .case-study-value-copy {
@@ -977,6 +987,10 @@ html[data-sky-quality="low"] .sky-layer--flare {
   align-items: start;
 }
 
+.case-study-visual-media {
+  padding-inline: var(--page-gutter);
+}
+
 .case-study-visual-copy {
   display: flex;
   flex-direction: column;
@@ -1009,20 +1023,13 @@ html[data-sky-quality="low"] .sky-layer--flare {
   gap: 80px;
 }
 
-.case-study-principle {
+.case-study-principle,
+.case-study-principle--flip {
   display: grid;
-  grid-template-columns: minmax(0, 674fr) minmax(0, 746fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   align-items: center;
-}
-
-.case-study-principle--flip {
-  grid-template-columns: minmax(0, 743fr) minmax(0, 677fr);
-  padding-right: var(--page-gutter);
-}
-
-.case-study-principle--play {
-  padding-left: var(--page-gutter);
+  padding-inline: var(--page-gutter);
 }
 
 .case-study-principle-copy p {
@@ -1058,8 +1065,9 @@ html[data-sky-quality="low"] .sky-layer--flare {
 
 .case-study-reflections-media {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  padding-inline: var(--page-gutter);
 }
 
 .case-study-reflections-copy {
@@ -1095,7 +1103,7 @@ html[data-sky-quality="low"] .sky-layer--flare {
 }
 
 .case-study-media--visual {
-  aspect-ratio: 746 / 489;
+  aspect-ratio: 674 / 441.49;
 }
 
 .case-study-media--guidelines {
@@ -1106,12 +1114,12 @@ html[data-sky-quality="low"] .sky-layer--flare {
   aspect-ratio: 746 / 488;
 }
 
-.case-study-media--id {
-  aspect-ratio: 745 / 500;
+.case-study-media--reflection {
+  aspect-ratio: 675 / 453;
 }
 
-.case-study-media--tote {
-  aspect-ratio: 745 / 500;
+.case-study-media--tote-reflection {
+  aspect-ratio: 678 / 453;
   background: #d9d9d9;
 }
 
@@ -1138,23 +1146,12 @@ html[data-sky-quality="low"] .sky-layer--flare {
   height: 105.96%;
 }
 
-.case-study-tote-a,
-.case-study-tote-b {
+.case-study-tote-single {
   position: absolute;
-}
-
-.case-study-tote-a {
-  width: 112.21%;
-  height: 133.6%;
-  left: -6.04%;
-  top: -26.4%;
-}
-
-.case-study-tote-b {
-  width: 105.5%;
-  height: 125.8%;
-  left: -2.68%;
-  top: -18.6%;
+  width: 115.93%;
+  height: 138.85%;
+  left: -2.95%;
+  top: -31.08%;
 }
 
 .case-study-story {
@@ -1187,11 +1184,6 @@ html[data-sky-quality="low"] .sky-layer--flare {
   gap: 120px;
 }
 
-.case-study-values-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 107px;
-}
 
 @media (max-width: 1023px) {
   .case-study-main {
@@ -1210,31 +1202,23 @@ html[data-sky-quality="low"] .sky-layer--flare {
   .case-study-principle,
   .case-study-principle--flip,
   .case-study-reflections-media,
-  .case-study-values-grid {
+  .case-study-values-copy-row,
+  .case-study-values-photos {
     grid-template-columns: 1fr;
   }
 
-  .case-study-audience {
-    padding-right: var(--page-gutter);
+  .case-study-discovery {
+    gap: 72px;
   }
 
   .case-study-visual-copy--right {
     padding-left: var(--page-gutter);
   }
 
-  .case-study-principle--play,
-  .case-study-principle--flip {
-    padding-inline: var(--page-gutter);
-  }
-
   .case-study-research,
   .case-study-context,
   .case-study-hero-overview,
   .case-study-story {
-    gap: 72px;
-  }
-
-  .case-study-values-wrap {
     gap: 72px;
   }
 }

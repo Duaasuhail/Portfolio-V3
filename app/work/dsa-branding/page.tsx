@@ -32,7 +32,15 @@ function CaseImage({
   crop,
 }: CaseImageProps) {
   const image = (
-    <Image src={src} alt={alt} fill sizes={sizes} priority={priority} />
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes={sizes}
+      priority={priority}
+      quality={100}
+      unoptimized
+    />
   );
 
   return (
@@ -66,7 +74,7 @@ export default function DsaBrandingCaseStudy() {
         <div className="case-study-content">
           <div className="case-study-story">
             <div className="case-study-research">
-              <div className="case-study-values-wrap">
+              <div className="case-study-discovery">
                 <div className="case-study-context">
                   <div className="case-study-hero-overview">
                     <section className="case-study-hero">
@@ -78,11 +86,15 @@ export default function DsaBrandingCaseStudy() {
                         </h1>
                         <div className="case-study-copy case-study-copy--muted">
                           <p>
-With a sudden team change leaving the DSA without a new brand identity a week before launch, I took the initiative and took on the task of creating a full visual identity, narrative, and design system from scratch.
+                            With a sudden team change leaving the DSA without a
+                            new brand identity a week before launch, I took the
+                            initiative and took on the task of creating a full
+                            visual identity, narrative, and design system from
+                            scratch.
                           </p>
                           <p className="mt-[22.5px]">
-I did a branding project with a product designer mindset. 
-
+                            I did a branding project with the mindset of a
+                            product designer.
                           </p>
                         </div>
                       </div>
@@ -164,7 +176,7 @@ I did a branding project with a product designer mindset.
                   </div>
 
                   <section className="case-study-audiences">
-                    <div className="case-study-audience">
+                    <div className="case-study-audience case-study-audience--student">
                       <div className="case-study-audience-intro">
                         <h2 className="case-study-h2">
                           Primary and secondary audiences (it’s not just
@@ -231,7 +243,7 @@ I did a branding project with a product designer mindset.
                         </div>
                         <figure className="case-study-photo">
                           <CaseImage
-                            src="/projects/dsa/first-year-jam.png"
+                            src="/projects/dsa/first-year-jam.jpg"
                             alt="Students collaborating around tables at DSA’s first-year jam"
                             className="case-study-media--photo"
                             sizes="(max-width: 1024px) 100vw, 746px"
@@ -243,19 +255,20 @@ I did a branding project with a product designer mindset.
                       </div>
                     </div>
 
-                    <div className="case-study-audience">
+                    <div className="case-study-audience case-study-audience--industry">
                       <div className="case-study-audience-intro">
                         <p className="case-study-copy case-study-copy--ink">
                           The Industry
                         </p>
-                        <p className="case-study-copy case-study-copy--muted">
-                          Recruiters, design leaders, agency partners, studios,
-                          and corporate sponsors looking for emerging talent.
-                        </p>
                       </div>
 
                       <div className="case-study-split">
-                        <div className="case-study-lists case-study-lists--industry case-study-copy case-study-copy--ink">
+                        <div className="case-study-lists case-study-copy case-study-copy--ink">
+                          <p className="case-study-copy--muted">
+                            Recruiters, design leaders, agency partners,
+                            studios, and corporate sponsors looking for emerging
+                            talent.
+                          </p>
                           <p>Goals:</p>
                           <ul>
                             <li>
@@ -304,7 +317,7 @@ I did a branding project with a product designer mindset.
                         </div>
                         <figure className="case-study-photo">
                           <CaseImage
-                            src="/projects/dsa/microsoft-vancouver.png"
+                            src="/projects/dsa/microsoft-vancouver.jpg"
                             alt="York design students touring Microsoft Vancouver"
                             className="case-study-media--photo"
                             crop="wide"
@@ -321,8 +334,8 @@ I did a branding project with a product designer mindset.
 
                 <section className="case-study-values">
                   <h2 className="case-study-h2">Pre-existing brand values</h2>
-                  <div className="case-study-values-grid">
-                    <article className="case-study-value">
+                  <div className="case-study-values-content">
+                    <div className="case-study-values-copy-row">
                       <div className="case-study-value-copy">
                         <h3 className="case-study-h2">Creative + Fun</h3>
                         <p className="case-study-copy case-study-copy--muted">
@@ -331,14 +344,6 @@ I did a branding project with a product designer mindset.
                           that encourage active student engagement.
                         </p>
                       </div>
-                      <CaseImage
-                        src="/projects/dsa/value-creative.png"
-                        alt="DSA members working together around a table"
-                        className="case-study-media--value"
-                        sizes="(max-width: 1024px) 100vw, 450px"
-                      />
-                    </article>
-                    <article className="case-study-value">
                       <div className="case-study-value-copy">
                         <h3 className="case-study-h2">
                           Collaborative + Inclusive
@@ -350,15 +355,6 @@ I did a branding project with a product designer mindset.
                           expand our network.
                         </p>
                       </div>
-                      <CaseImage
-                        src="/projects/dsa/value-collaborative.png"
-                        alt="Students gathered together in a collaborative workshop"
-                        className="case-study-media--value"
-                        crop="tall"
-                        sizes="(max-width: 1024px) 100vw, 450px"
-                      />
-                    </article>
-                    <article className="case-study-value">
                       <div className="case-study-value-copy">
                         <h3 className="case-study-h2">Empowering + Bold</h3>
                         <p className="case-study-copy case-study-copy--muted">
@@ -368,18 +364,32 @@ I did a branding project with a product designer mindset.
                           growing.
                         </p>
                       </div>
+                    </div>
+                    <div className="case-study-values-photos">
                       <CaseImage
-                        src="/projects/dsa/value-empowering.png"
+                        src="/projects/dsa/value-creative.jpg"
+                        alt="DSA members working together around a table"
+                        className="case-study-media--value"
+                        sizes="(max-width: 1024px) 33vw, 450px"
+                      />
+                      <CaseImage
+                        src="/projects/dsa/value-collaborative.jpg"
+                        alt="Students gathered together in a collaborative workshop"
+                        className="case-study-media--value"
+                        crop="tall"
+                        sizes="(max-width: 1024px) 33vw, 450px"
+                      />
+                      <CaseImage
+                        src="/projects/dsa/value-empowering.jpg"
                         alt="A large group of DSA members posing together"
                         className="case-study-media--value"
-                        sizes="(max-width: 1024px) 100vw, 450px"
+                        sizes="(max-width: 1024px) 33vw, 450px"
                       />
-                    </article>
+                    </div>
                   </div>
                 </section>
-              </div>
 
-              <section className="case-study-thinking">
+                <section className="case-study-thinking">
                 <div className="case-study-thinking-copy">
                   <p className="case-study-copy case-study-copy--dim">
                     Design Thinking
@@ -407,8 +417,8 @@ I did a branding project with a product designer mindset.
                 </div>
 
                 <CaseImage
-                  src="/projects/dsa/dsa-mockup.png"
-                  alt="DSA wordmark on a tote bag, laptop, mug, and phone"
+                  src="/projects/dsa/dsa-mockup-hero.png"
+                  alt="Group photo with the DSA wordmark overlaid"
                   className="case-study-media--mockup"
                   sizes="100vw"
                 />
@@ -442,13 +452,14 @@ I did a branding project with a product designer mindset.
                   </div>
                 </div>
               </section>
+              </div>
             </div>
 
             <section className="case-study-visual">
               <div className="case-study-visual-info">
                 <div className="case-study-visual-copy case-study-visual-copy--left">
                   <h2 className="case-study-h2">
-                    The connected wordmark paying homage to our old sister program
+                    The connected wordmark (homage to our old sister program)
                   </h2>
                   <p className="case-study-copy case-study-copy--muted">
                     DSA hasn’t used a physically connected wordmark since 2010.
@@ -459,7 +470,7 @@ I did a branding project with a product designer mindset.
                 </div>
                 <div className="case-study-visual-copy case-study-visual-copy--right">
                   <h2 className="case-study-h2">
-                    Nostalgic vibes blending with clean UX:
+                    Nostalgic vibes blending with clean UX
                   </h2>
                   <p className="case-study-copy case-study-copy--muted">
                     Underneath the playful surface, I created a strict grid
@@ -498,12 +509,12 @@ I did a branding project with a product designer mindset.
             <p className="case-study-label">Brand System</p>
             <h2 className="case-study-h2">
               I wanted the brand to work as a supportive internal design system
-              that offers both nostalgic playfulness and systemic support
+              that offers both nostalgic playfulness and systemic support:
             </h2>
           </div>
 
           <div className="case-study-principles">
-            <div className="case-study-principle case-study-principle--play">
+            <div className="case-study-principle">
               <div className="case-study-principle-copy case-study-copy case-study-copy--muted">
                 <p>Nostalgic Playfulness</p>
                 <ul>
@@ -532,14 +543,18 @@ I did a branding project with a product designer mindset.
                   src="/projects/dsa/systematic-use.png"
                   alt="DSA Instagram post for a process documentation workshop"
                   fill
-                  sizes="(max-width: 1024px) 100vw, 743px"
+                  sizes="(max-width: 1024px) 100vw, 676px"
+                  quality={100}
+                  unoptimized
                 />
               </div>
               <div className="case-study-principle-copy case-study-copy case-study-copy--muted">
                 <p>Systematic Use</p>
                 <ul>
                   <li>
-                    Reusable tokens and modular kits turn layout creation into a fast drag-and-drop workflow. Cutting down time taken to create posts by <b>90%</b>.
+                    Reusable tokens and modular kits turn layout creation into a
+                    fast drag-and-drop workflow. Cutting down time taken to
+                    create posts by 90%.
                   </li>
                 </ul>
               </div>
@@ -553,27 +568,20 @@ I did a branding project with a product designer mindset.
             <CaseImage
               src="/projects/dsa/id-cards.png"
               alt="Front and back of a DSA event badge"
-              className="case-study-media--id"
+              className="case-study-media--reflection"
               crop="id"
-              sizes="(max-width: 1024px) 100vw, 745px"
+              sizes="(max-width: 1024px) 100vw, 675px"
             />
-            <div className="case-study-media case-study-media--tote">
-              <div className="case-study-tote-a">
-                <Image
-                  src="/projects/dsa/tote-bag-1.png"
-                  alt=""
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 836px"
-                  className="object-cover"
-                />
-              </div>
-              <div className="case-study-tote-b">
+            <div className="case-study-media case-study-media--tote-reflection">
+              <div className="case-study-tote-single">
                 <Image
                   src="/projects/dsa/tote-bag-2.png"
                   alt="Red DSA tote bag with a cream flower"
                   fill
-                  sizes="(max-width: 1024px) 100vw, 786px"
+                  sizes="(max-width: 1024px) 100vw, 678px"
                   className="object-cover"
+                  quality={100}
+                  unoptimized
                 />
               </div>
             </div>
