@@ -31,6 +31,30 @@ export default function ProjectCard({
   );
 }
 
+export function FeltCard() {
+  return (
+    <Link href="/felt" className="block transition-opacity hover:opacity-80">
+      <ProjectCard
+        title="Figbuild 2026 - Felt."
+        tags="Product Design | Designathon | Award Winning"
+        description="Turning invisible menstrual pain into real-time, measurable clinical data."
+      >
+        <div className="project-media absolute inset-0">
+          <Image
+            src="/projects/felt-cover.png"
+            alt="Felt. phone screen beside the RGD Student Awards winner mark"
+            fill
+            sizes="(max-width: 1024px) 100vw, 674px"
+            className="object-cover"
+            quality={90}
+            priority
+          />
+        </div>
+      </ProjectCard>
+    </Link>
+  );
+}
+
 export function CtrlvoxCard() {
   return (
     <ProjectCard
@@ -45,7 +69,7 @@ export function CtrlvoxCard() {
           fill
           sizes="(max-width: 1024px) 100vw, 674px"
           className="object-cover"
-          priority
+          quality={90}
         />
       </div>
     </ProjectCard>
@@ -67,6 +91,8 @@ export function DsaCard() {
             fill
             sizes="(max-width: 1024px) 100vw, 674px"
             className="object-cover"
+            quality={90}
+
           />
         </div>
       </ProjectCard>

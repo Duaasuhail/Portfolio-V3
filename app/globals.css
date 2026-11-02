@@ -1184,6 +1184,405 @@ html[data-sky-quality="low"] .sky-layer--flare {
   gap: 120px;
 }
 
+/* —— felt. case study —— */
+.felt strong {
+  font-weight: 700;
+}
+
+.felt-main,
+.felt-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 172px;
+  width: 100%;
+}
+
+.felt-main {
+  padding-top: 208px;
+  padding-bottom: 208px;
+}
+
+.felt-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+}
+
+.felt-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-inline: var(--page-gutter);
+}
+
+.felt-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 70px;
+  width: 100%;
+}
+
+.felt-hero-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 33px;
+  width: min(672px, calc(100% - (var(--page-gutter) * 2)));
+  margin-inline: auto;
+  text-align: center;
+}
+
+.felt-kicker {
+  display: flex;
+  flex-direction: column;
+  gap: 22.5px;
+  color: var(--greyscale-500);
+}
+
+.felt-kicker p {
+  margin: 0;
+}
+
+.felt-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.felt-link:hover {
+  opacity: 0.7;
+}
+
+.felt-url {
+  overflow-wrap: anywhere;
+}
+
+.felt-hero-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1512 / 589;
+  overflow: hidden;
+  background: #f6f3fb;
+}
+
+.felt-hero-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.felt-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  padding-inline: var(--page-gutter);
+}
+
+.felt-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 56px;
+}
+
+.felt-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.felt-meta-value--dim {
+  color: #6b6b6b;
+}
+
+.felt-prose p {
+  margin: 0;
+}
+
+.felt-blank {
+  height: 22.5px;
+}
+
+.felt-interoception {
+  gap: 12px;
+}
+
+.felt-split,
+.felt-solutions,
+.felt-solution-shots,
+.felt-process-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.felt-solutions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding-inline: var(--page-gutter);
+}
+
+.felt-solution-card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.felt-h3 {
+  margin: 0;
+  font-family: var(--font-source-sans), sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--greyscale-950);
+}
+
+.felt-solution-shots {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.felt-solution-shot {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 440 / 500;
+}
+
+.felt-solution-shot .felt-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% * 542 / 500);
+}
+
+.felt-caption {
+  margin: 0;
+  font-family: var(--font-source-sans), sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22.5px;
+  color: var(--greyscale-300);
+}
+
+.felt-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding-inline: var(--page-gutter);
+}
+
+.felt-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.felt-stat-value {
+  margin: 0;
+  font-family: var(--font-alegreya), serif;
+  font-size: 64px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--greyscale-950);
+}
+
+.felt-body-diagram {
+  aspect-ratio: 674 / 440;
+}
+
+.felt-pullquote {
+  width: min(1368px, calc(100% - (var(--page-gutter) * 2)));
+  margin: 0 auto;
+  font-family: var(--font-alegreya), serif;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  color: #000000;
+}
+
+.felt-pullquote--narrow {
+  width: min(558px, calc(100% - (var(--page-gutter) * 2)));
+}
+
+.felt-quotes-scroller {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.felt-quotes {
+  position: relative;
+  width: 100%;
+  min-width: 1100px;
+  aspect-ratio: 1512 / 864.938;
+}
+
+.felt-quote {
+  position: absolute;
+  overflow: hidden;
+}
+
+.felt-quote img {
+  position: absolute;
+  max-width: none;
+  height: 100%;
+  left: 0;
+  top: 0;
+}
+
+.felt-quote img.is-cover {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.felt-process-grid {
+  gap: 24px;
+  padding-inline: var(--page-gutter);
+}
+
+.felt-iterations-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.felt-iterations {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 860px;
+  padding-block: 40px;
+  font-family: var(--font-source-sans), sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22.5px;
+}
+
+.felt-iterations-head,
+.felt-iterations-row p {
+  margin: 0;
+}
+
+.felt-iterations-head {
+  color: #131314;
+}
+
+.felt-iterations-row {
+  display: contents;
+}
+
+.felt-iterations-row p {
+  color: #676971;
+}
+
+.felt-features {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-inline: var(--page-gutter);
+}
+
+.felt-feature-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: center;
+}
+
+.felt-feature-copy {
+  font-family: var(--font-source-sans), sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22.5px;
+  color: #676971;
+}
+
+.felt-feature-title {
+  margin: 0 0 22.5px;
+  color: #131314;
+}
+
+.felt-feature-group {
+  margin-top: 22.5px;
+}
+
+.felt-feature-group:first-of-type {
+  margin-top: 0;
+}
+
+.felt-feature-group p,
+.felt-feature-group ul {
+  margin: 0;
+}
+
+.felt-feature-group ul {
+  padding-left: 24px;
+  list-style: disc;
+}
+
+.felt-feature-media--narrow {
+  width: calc(100% * 656 / 674);
+}
+
+.felt-frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.felt-frame img {
+  position: absolute;
+  max-width: none;
+  height: 100%;
+  left: 0;
+  top: 0;
+}
+
+.felt-frame img.is-cover {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 1023px) {
+  .felt-main,
+  .felt-cluster {
+    gap: 96px;
+  }
+
+  .felt-main {
+    padding-top: 140px;
+    padding-bottom: 96px;
+  }
+
+  .felt-hero {
+    gap: 48px;
+  }
+
+  .felt-meta,
+  .felt-stats,
+  .felt-split,
+  .felt-solutions,
+  .felt-solution-shots,
+  .felt-process-grid,
+  .felt-feature-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .felt-feature-media--narrow {
+    width: 100%;
+  }
+
+  .felt-stat-value {
+    font-size: 48px;
+  }
+}
+
 
 @media (max-width: 1023px) {
   .case-study-main {

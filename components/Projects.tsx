@@ -1,4 +1,4 @@
-import { CtrlvoxCard, DsaCard } from "./ProjectCard";
+import { CtrlvoxCard, DsaCard, FeltCard } from "./ProjectCard";
 
 export default function Projects() {
   return (
@@ -7,8 +7,9 @@ export default function Projects() {
         Selected Projects
       </h2>
       <div className="projects-grid">
-        <CtrlvoxCard />
+        <FeltCard />
         <DsaCard />
+        <CtrlvoxCard />
       </div>
     </div>
   );
