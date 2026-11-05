@@ -176,7 +176,7 @@ const features: {
     title: "Onboarding",
     mediaFirst: true,
     media: {
-      src: "/projects/felt/onboarding.mp4",
+      src: "/projects/felt/onboarding.gif",
       alt: "Felt. sign-in screen on a phone, reading “Giving period pain a visual language.”",
       narrow: true,
     },
