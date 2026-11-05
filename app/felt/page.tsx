@@ -203,7 +203,7 @@ const features: {
     title: "Pain History",
     mediaFirst: false,
     media: {
-      src: "/projects/felt/history-phone.mp4",
+      src: "projects/felt/history-phone.gif",
       alt: "Felt. splash screen on a phone: “Felt. Pain. Understood.”",
     },
     groups: [
@@ -229,7 +229,7 @@ const features: {
     title: "Self Diagnosis",
     mediaFirst: true,
     media: {
-      src: "/projects/felt/feature-99.mp4",
+      src: "/projects/felt/feature-99.gif",
       alt: "Felt. splash screen on a textured blue background",
       img: { width: "102.91%", height: "100.02%", left: "-1.52%", top: "-0.23%" },
     },
@@ -256,7 +256,7 @@ const features: {
     title: "Automatic Emergency Notifications",
     mediaFirst: false,
     media: {
-      src: "/projects/felt/notification.mp4",
+      src: "/projects/felt/notification.gif",
       alt: "Phone lock screen used in the Felt. emergency notification prototype",
     },
     groups: [

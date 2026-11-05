@@ -540,7 +540,7 @@ export default function DsaBrandingCaseStudy() {
             <div className="case-study-principle case-study-principle--flip">
               <div className="case-study-systematic-media">
                 <Image
-                  src="/projects/dsa/Variables mockup.mp4"
+                  src="/projects/dsa/Variables mockup.gif"
                   alt="DSA Instagram post for a process documentation workshop"
                   fill
                   sizes="(max-width: 1024px) 100vw, 676px"
