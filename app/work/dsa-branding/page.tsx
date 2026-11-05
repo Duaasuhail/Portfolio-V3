@@ -488,7 +488,7 @@ export default function DsaBrandingCaseStudy() {
                   sizes="(max-width: 1024px) 100vw, 746px"
                 />
                 <CaseImage
-                  src="/projects/dsa/instagram-mockups.png"
+                  src="/projects/dsa/instagram-mockups.gif"
                   alt="DSA Instagram post mockups on a phone and in a browser"
                   className="case-study-media--visual"
                   sizes="(max-width: 1024px) 100vw, 746px"
@@ -540,7 +540,7 @@ export default function DsaBrandingCaseStudy() {
             <div className="case-study-principle case-study-principle--flip">
               <div className="case-study-systematic-media">
                 <Image
-                  src="/projects/dsa/systematic-use.png"
+                  src="/projects/dsa/Variables mockup.mp4"
                   alt="DSA Instagram post for a process documentation workshop"
                   fill
                   sizes="(max-width: 1024px) 100vw, 676px"
