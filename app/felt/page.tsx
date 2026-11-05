@@ -176,7 +176,7 @@ const features: {
     title: "Onboarding",
     mediaFirst: true,
     media: {
-      src: "/projects/felt/onboarding.png",
+      src: "/projects/felt/onboarding.mp4",
       alt: "Felt. sign-in screen on a phone, reading “Giving period pain a visual language.”",
       narrow: true,
     },
@@ -203,7 +203,7 @@ const features: {
     title: "Pain History",
     mediaFirst: false,
     media: {
-      src: "/projects/felt/history-phone.png",
+      src: "/projects/felt/history-phone.mp4",
       alt: "Felt. splash screen on a phone: “Felt. Pain. Understood.”",
     },
     groups: [
@@ -229,7 +229,7 @@ const features: {
     title: "Self Diagnosis",
     mediaFirst: true,
     media: {
-      src: "/projects/felt/feature-99.png",
+      src: "/projects/felt/feature-99.mp4",
       alt: "Felt. splash screen on a textured blue background",
       img: { width: "102.91%", height: "100.02%", left: "-1.52%", top: "-0.23%" },
     },
@@ -256,7 +256,7 @@ const features: {
     title: "Automatic Emergency Notifications",
     mediaFirst: false,
     media: {
-      src: "/projects/felt/notification.png",
+      src: "/projects/felt/notification.mp4",
       alt: "Phone lock screen used in the Felt. emergency notification prototype",
     },
     groups: [
