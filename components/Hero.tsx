@@ -1,7 +1,11 @@
 import GalaxyBackground from "./GalaxyBackground";
 import SkyShape from "./SkyShape";
 
-const navLinks = ["Work", "Gaming", "About"];
+const navLinks = [
+  { label: "Work", href: "#work" },
+  { label: "Gaming", href: "#gaming" },
+  { label: "About", href: "/about" },
+];
 
 // Same sky style as before — ends sooner (cream tip higher)
 export const HERO_VH = 140;
@@ -24,11 +28,11 @@ export default function Hero() {
           <nav className="flex items-center gap-12">
             {navLinks.map((link) => (
               <a
-                key={link}
-                href={`#${link.toLowerCase()}`}
+                key={link.label}
+                href={link.href}
                 className="text-nav whitespace-nowrap transition-opacity hover:opacity-70"
               >
-                {link}
+                {link.label}
               </a>
             ))}
           </nav>

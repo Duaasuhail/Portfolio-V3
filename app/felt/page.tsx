@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const navLinks = [
   { label: "Work", href: "/#work" },
   { label: "Gaming", href: "/#gaming" },
-  { label: "About", href: "/#about" },
+  { label: "About", href: "/about" },
 ] as const;
 
 const QUOTE_W = 1512;

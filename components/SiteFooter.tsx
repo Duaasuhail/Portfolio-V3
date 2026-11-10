@@ -8,11 +8,11 @@ const contactLinks = [
 ] as const;
 
 const pageLinks = [
-  { label: "Work", href: "#work" },
-  { label: "About", href: "#about" },
-  { label: "Philosophy", href: "#philosophy" },
-  { label: "Gaming", href: "#gaming" },
-  { label: "Archive", href: "#archive" },
+  { label: "Work", href: "/#work" },
+  { label: "About", href: "/about" },
+  { label: "Philosophy", href: "/#philosophy" },
+  { label: "Gaming", href: "/#gaming" },
+  { label: "Archive", href: "/#archive" },
 ] as const;
 
 /**
