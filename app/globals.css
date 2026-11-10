@@ -36,6 +36,7 @@
   --page-gutter: clamp(20px, 4.76vw, 72px);
   --page-content: 100%;
   --nav-top: 40px;
+  --space-172: 172px;
   --projects-gap: 20px;
   /* 7.75rem (124px) — cream between hero gradient end and Selected Projects */
   --projects-top-gap: clamp(3.75rem, 8.2vw, 7.75rem);
@@ -1193,13 +1194,17 @@ html[data-sky-quality="low"] .sky-layer--flare {
 .felt-cluster {
   display: flex;
   flex-direction: column;
-  gap: 172px;
   width: 100%;
 }
 
 .felt-main {
-  padding-top: 208px;
-  padding-bottom: 208px;
+  gap: var(--space-172);
+  padding-top: var(--space-172);
+  padding-bottom: var(--space-172);
+}
+
+.felt-cluster {
+  gap: 40px;
 }
 
 .felt-stack {
@@ -1219,14 +1224,14 @@ html[data-sky-quality="low"] .sky-layer--flare {
 .felt-hero {
   display: flex;
   flex-direction: column;
-  gap: 70px;
+  gap: 72px;
   width: 100%;
 }
 
 .felt-hero-intro {
   display: flex;
   flex-direction: column;
-  gap: 33px;
+  gap: 32px;
   width: min(672px, calc(100% - (var(--page-gutter) * 2)));
   margin-inline: auto;
   text-align: center;
@@ -1260,7 +1265,7 @@ html[data-sky-quality="low"] .sky-layer--flare {
 .felt-hero-media {
   position: relative;
   width: 100%;
-  aspect-ratio: 1512 / 589;
+  aspect-ratio: 3056 / 1190;
   overflow: hidden;
   background: #f6f3fb;
 }
@@ -1347,15 +1352,14 @@ html[data-sky-quality="low"] .sky-layer--flare {
 .felt-solution-shot {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 440 / 500;
+  aspect-ratio: 440 / 542;
 }
 
 .felt-solution-shot .felt-frame {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
-  height: calc(100% * 542 / 500);
+  height: 100%;
 }
 
 .felt-caption {
@@ -1396,12 +1400,17 @@ html[data-sky-quality="low"] .sky-layer--flare {
 .felt-pullquote {
   width: min(1368px, calc(100% - (var(--page-gutter) * 2)));
   margin: 0 auto;
+  padding-block: 172px;
   font-family: var(--font-alegreya), serif;
   font-size: 24px;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: normal;
   text-align: center;
   color: #000000;
+}
+
+.felt-pullquote:not(.felt-pullquote--narrow) {
+  white-space: nowrap;
 }
 
 .felt-pullquote--narrow {
@@ -1410,13 +1419,12 @@ html[data-sky-quality="low"] .sky-layer--flare {
 
 .felt-quotes-scroller {
   width: 100%;
-  overflow-x: auto;
+  overflow: hidden;
 }
 
 .felt-quotes {
   position: relative;
   width: 100%;
-  min-width: 1100px;
   aspect-ratio: 1512 / 864.938;
 }
 
@@ -1550,14 +1558,18 @@ html[data-sky-quality="low"] .sky-layer--flare {
 }
 
 @media (max-width: 1023px) {
-  .felt-main,
-  .felt-cluster {
-    gap: 96px;
-  }
-
   .felt-main {
     padding-top: 140px;
     padding-bottom: 96px;
+  }
+
+  .felt-cluster {
+    gap: 32px;
+  }
+
+  .felt-pullquote {
+    padding-block: 64px;
+    white-space: normal;
   }
 
   .felt-hero {

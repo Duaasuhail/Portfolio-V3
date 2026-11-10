@@ -203,7 +203,7 @@ const features: {
     title: "Pain History",
     mediaFirst: false,
     media: {
-      src: "projects/felt/history-phone.gif",
+      src: "/projects/felt/history-phone.gif",
       alt: "Felt. splash screen on a phone: “Felt. Pain. Understood.”",
     },
     groups: [
