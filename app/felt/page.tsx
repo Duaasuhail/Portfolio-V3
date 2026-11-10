@@ -494,7 +494,7 @@ export default function FeltPage() {
               </p>
               <div className="felt-frame felt-body-diagram">
                 <img
-                  src="/projects/felt/body-diagram.png"
+                  src="/projects/felt/Menstruation-symptoms.png"
                   alt="Body diagram mapping menstrual symptoms, including brain fog, nausea, abdominal cramping, and muscle weakness"
                   className="is-cover"
                 />
