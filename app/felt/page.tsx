@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import FeltSurveyResponses from "@/components/FeltSurveyResponses";
 
 export const metadata: Metadata = {
   title: "felt. — Duaa Suhail",
@@ -14,9 +15,6 @@ const navLinks = [
   { label: "About", href: "/about" },
 ] as const;
 
-const QUOTE_W = 1512;
-const QUOTE_H = 864.938;
-
 type QuoteShot = {
   src: string;
   x: number;
@@ -28,33 +26,33 @@ type QuoteShot = {
 };
 
 const quotes: QuoteShot[] = [
-  { src: "quote-1.png", x: 1238.79, y: 203.64, w: 257.574, h: 75.892, img: { width: "463.39%" } },
-  { src: "quote-14.png", x: 3.09, y: 0, w: 1192.812, h: 105.023, cover: true },
-  { src: "quote-18.png", x: 590.08, y: 781.38, w: 777.321, h: 83.558, img: { width: "153.85%" } },
-  { src: "quote-17.png", x: 20.83, y: 760.55, w: 579.541, h: 78.959, img: { width: "206.22%" } },
-  { src: "quote-7.png", x: 0, y: 212.12, w: 1154.482, h: 114.222, img: { width: "103.65%" } },
-  { src: "quote-6.png", x: 0, y: 531.46, w: 1195.878, h: 112.689, cover: true },
-  { src: "quote-5.png", x: 7.71, y: 100.55, w: 788.053, h: 74.359, img: { width: "152.04%" } },
-  { src: "quote-13.png", x: 729.84, y: 667.98, w: 758.156, h: 80.492, img: { width: "157.74%" } },
-  { src: "quote-2.png", x: 874.71, y: 68.65, w: 626.303, h: 72.826, img: { width: "190.33%" } },
-  { src: "quote-19.png", x: 259.92, y: 169.54, w: 541.211, h: 68.993, cover: true },
-  { src: "quote-4.png", x: 861.6, y: 138.07, w: 397.093, h: 73.592, img: { width: "300.77%" } },
-  { src: "quote-12.png", x: 408.82, y: 602.43, w: 1103.121, h: 78.192, img: { width: "108.34%" } },
-  { src: "quote-15.png", x: 1073.72, y: 732.01, w: 413.958, h: 78.959, img: { width: "288.33%" } },
+  { src: "quote-1.png", x: 1238.79, y: 254.37, w: 257.574, h: 75.892, img: { width: "463.39%" } },
+  { src: "quote-14.png", x: 3.09, y: 50.73, w: 1192.812, h: 105.023, cover: true },
+  { src: "quote-18.png", x: 590.08, y: 832.11, w: 777.321, h: 83.558, img: { width: "153.85%" } },
+  { src: "quote-17.png", x: 20.83, y: 811.28, w: 579.541, h: 78.959, img: { width: "206.22%" } },
+  { src: "quote-7.png", x: 0, y: 262.85, w: 1154.482, h: 114.222, img: { width: "103.65%" } },
+  { src: "quote-6.png", x: 0, y: 582.19, w: 1195.878, h: 112.689, cover: true },
+  { src: "quote-5.png", x: 7.71, y: 151.28, w: 788.053, h: 74.359, img: { width: "152.04%" } },
+  { src: "quote-13.png", x: 729.84, y: 718.71, w: 758.156, h: 80.492, img: { width: "157.74%" } },
+  { src: "quote-2.png", x: 874.71, y: 119.38, w: 626.303, h: 72.826, img: { width: "190.33%" } },
+  { src: "quote-19.png", x: 259.92, y: 220.27, w: 541.211, h: 68.993, cover: true },
+  { src: "quote-4.png", x: 861.6, y: 188.8, w: 397.093, h: 73.592, img: { width: "300.77%" } },
+  { src: "quote-12.png", x: 408.82, y: 653.16, w: 1103.121, h: 78.192, img: { width: "108.34%" } },
+  { src: "quote-15.png", x: 1073.72, y: 782.74, w: 413.958, h: 78.959, img: { width: "288.33%" } },
   {
     src: "quote-21.png",
     x: 85.62,
-    y: 716.59,
+    y: 767.32,
     w: 870.845,
     h: 57.494,
     img: { width: "125.44%", left: "-0.04%", top: "0.67%" },
   },
-  { src: "quote-11.png", x: 7.71, y: 657.41, w: 614.768, h: 72.368, img: { width: "181.47%" } },
-  { src: "quote-3.png", x: 67.88, y: 302.37, w: 806.451, h: 81.258, img: { width: "147.81%" } },
-  { src: "quote-22.png", x: 543.03, y: 268.43, w: 968.968, h: 59.027, cover: true },
-  { src: "quote-10.png", x: 0, y: 435.04, w: 1194.345, h: 111.922, cover: true },
-  { src: "quote-9.png", x: 1083.75, y: 485.95, w: 427.756, h: 78.192, img: { width: "279.21%" } },
-  { src: "quote-23.png", x: 336.31, y: 364.85, w: 1175.541, h: 87.934, cover: true },
+  { src: "quote-11.png", x: 7.71, y: 708.14, w: 614.768, h: 72.368, img: { width: "181.47%" } },
+  { src: "quote-3.png", x: 67.88, y: 353.1, w: 806.451, h: 81.258, img: { width: "147.81%" } },
+  { src: "quote-22.png", x: 543.03, y: 319.16, w: 968.968, h: 59.027, cover: true },
+  { src: "quote-10.png", x: 0, y: 485.77, w: 1194.345, h: 111.922, cover: true },
+  { src: "quote-9.png", x: 1083.75, y: 536.68, w: 427.756, h: 78.192, img: { width: "279.21%" } },
+  { src: "quote-23.png", x: 336.31, y: 415.58, w: 1175.541, h: 87.934, cover: true },
 ];
 
 const stats = [
@@ -477,21 +475,23 @@ export default function FeltPage() {
           </section>
 
           <section className="felt-block felt-interoception">
-            <h2 className="case-study-h2">
-              With mensuration, comes the sensation of pain, more specifically{" "}
-              <strong>Interoception</strong>. It is your body&apos;s internal
-              sense of its own physical state.
-            </h2>
             <div className="felt-split">
-              <p className="case-study-copy case-study-copy--muted">
-                Menstrual pain is systemic, multifaceted, and deeply somatic. It
-                manifests as migraines, brain fog, nausea, pelvic inflammation,
-                fainting spells, and debilitating muscle weakness. Yet the
-                standard clinical diagnostic tool remains the reductionist
-                1-to-10 numerical rating scale a tool that flattens complex
-                bodily trauma into an arbitrary digit that healthcare providers
-                often discount.
-              </p>
+              <div className="felt-split-copy">
+                <h2 className="case-study-h2">
+                  With mensuration, comes the sensation of pain, more specifically{" "}
+                  <strong>Interoception</strong>. It is your body&apos;s internal
+                  sense of its own physical state.
+                </h2>
+                <p className="case-study-copy case-study-copy--muted">
+                  Menstrual pain is systemic, multifaceted, and deeply somatic. It
+                  manifests as migraines, brain fog, nausea, pelvic inflammation,
+                  fainting spells, and debilitating muscle weakness. Yet the
+                  standard clinical diagnostic tool remains the reductionist
+                  1-to-10 numerical rating scale a tool that flattens complex
+                  bodily trauma into an arbitrary digit that healthcare providers
+                  often discount.
+                </p>
+              </div>
               <div className="felt-frame felt-body-diagram">
                 <img
                   src="/projects/felt/Menstruation-symptoms.png"
@@ -533,33 +533,7 @@ export default function FeltPage() {
             unrelated metaphor, what would it be?&quot;
           </p>
 
-          <div className="felt-quotes-scroller">
-            <div
-              className="felt-quotes"
-              role="img"
-              aria-label="Scattered anonymous survey responses describing menstrual pain through metaphor"
-            >
-              {quotes.map((quote) => (
-                <div
-                  key={`${quote.src}-${quote.x}-${quote.y}`}
-                  className="felt-quote"
-                  style={{
-                    left: `${(quote.x / QUOTE_W) * 100}%`,
-                    top: `${(quote.y / QUOTE_H) * 100}%`,
-                    width: `${(quote.w / QUOTE_W) * 100}%`,
-                    height: `${(quote.h / QUOTE_H) * 100}%`,
-                  }}
-                >
-                  <img
-                    src={`/projects/felt/${quote.src}`}
-                    alt=""
-                    className={quote.cover ? "is-cover" : undefined}
-                    style={quote.img}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+          <FeltSurveyResponses quotes={quotes} />
 
           <p className="felt-pullquote felt-pullquote--narrow">
             The responses were raw, and understandable. When people lack

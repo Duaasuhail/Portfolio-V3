@@ -1207,6 +1207,10 @@ html[data-sky-quality="low"] .sky-layer--flare {
   gap: 40px;
 }
 
+.felt-main > .felt-cluster:first-of-type {
+  gap: var(--space-172);
+}
+
 .felt-stack {
   display: flex;
   flex-direction: column;
@@ -1323,6 +1327,12 @@ html[data-sky-quality="low"] .sky-layer--flare {
   align-items: start;
 }
 
+.felt-split-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .felt-solutions {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
@@ -1418,19 +1428,46 @@ html[data-sky-quality="low"] .sky-layer--flare {
 }
 
 .felt-quotes-scroller {
+  display: flex;
+  align-items: center;
   width: 100%;
-  overflow: hidden;
+  min-height: 100vh;
+  background: #1c1943;
+  overflow: clip;
 }
 
 .felt-quotes {
   position: relative;
   width: 100%;
-  aspect-ratio: 1512 / 864.938;
+  aspect-ratio: 1512 / 965;
+  view-timeline-name: --felt-survey;
+  view-timeline-axis: block;
+}
+
+@keyframes felt-quote-rise {
+  from {
+    opacity: 0;
+    translate: 0 72px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
 
 .felt-quote {
   position: absolute;
   overflow: hidden;
+  animation: felt-quote-rise cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-timeline: --felt-survey;
+  animation-range: entry 0% entry 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .felt-quote {
+    animation: none;
+  }
 }
 
 .felt-quote img {
