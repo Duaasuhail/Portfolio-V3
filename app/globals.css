@@ -2078,7 +2078,7 @@ html[data-sky-quality="low"] .sky-layer--flare {
   }
 }
 
-/* Custom cursor — fine pointers only, and never over the galaxy pen zone. */
+/* Custom cursor — fine pointers only */
 html.has-custom-cursor,
 html.has-custom-cursor * {
   cursor: none !important;
@@ -2086,11 +2086,14 @@ html.has-custom-cursor * {
 
 .cursor-layer {
   display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   pointer-events: none;
 }
 
 html.has-custom-cursor .cursor-layer {
-  display: contents;
+  display: block;
 }
 
 .cursor-star,
@@ -2104,88 +2107,120 @@ html.has-custom-cursor .cursor-layer {
   left: 0;
   pointer-events: none;
   will-change: transform;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .cursor-dot {
-  z-index: 70;
+  z-index: 1;
   opacity: 0;
+  border-radius: 0;
 }
 
+/* 4-point pixel sparkle with 1px dark outline + light core */
 .cursor-dot--star {
   width: 7px;
   height: 7px;
-  background: #7ccefd;
-  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  background: var(--greyscale-950);
+  clip-path: polygon(
+    28% 0%, 72% 0%, 72% 28%, 100% 28%,
+    100% 72%, 72% 72%, 72% 100%, 28% 100%,
+    28% 72%, 0% 72%, 0% 28%, 28% 28%
+  );
 }
 
+.cursor-dot--star::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: var(--greyscale-50);
+  clip-path: polygon(
+    33% 0%, 67% 0%, 67% 33%, 100% 33%,
+    100% 67%, 67% 67%, 67% 100%, 33% 100%,
+    33% 67%, 0% 67%, 0% 33%, 33% 33%
+  );
+}
+
+/* 2px light pixel dust framed by a crisp 1px dark border */
 .cursor-dot--pixel {
-  width: 2px;
-  height: 2px;
-  background: #046bec;
-}
-
-.cursor-frame {
-  z-index: 71;
+  width: 4px;
+  height: 4px;
   box-sizing: border-box;
-  border: 1.5px solid #fff;
-  mix-blend-mode: difference;
+  background: var(--greyscale-100);
+  border: 1px solid var(--greyscale-950);
+}
+
+/* Hairline 1px frame around buttons */
+.cursor-frame {
+  z-index: 2;
+  box-sizing: border-box;
+  border: 1px solid var(--greyscale-500);
+  box-shadow: inset 0 0 0 1px var(--greyscale-950);
+  border-radius: 0;
   opacity: 0;
 }
 
+/* Subtle 1px square reticle on links */
 .cursor-ring {
-  z-index: 72;
-  width: 36px;
-  height: 36px;
-  border: 1.5px solid #fff;
-  border-radius: 50%;
-  mix-blend-mode: difference;
+  z-index: 3;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--greyscale-400);
+  box-shadow: inset 0 0 0 1px var(--greyscale-950);
+  border-radius: 0;
   opacity: 0;
 }
 
+/* Clean dithered shadow under the tag */
 .cursor-pill-shadow {
-  z-index: 73;
-  border-radius: 999px;
-  background: #046bec;
+  z-index: 4;
+  border-radius: 0;
+  background: repeating-conic-gradient(
+      var(--greyscale-500) 0% 25%,
+      var(--greyscale-950) 0% 50%
+    )
+    50% / 2px 2px;
   opacity: 0;
 }
 
+/* Editorial pixel tag matching Source Sans & --sky-cloud */
 .cursor-pill {
-  z-index: 74;
+  z-index: 5;
   display: grid;
   place-items: center;
-  height: 28px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: #fff;
-  color: #000;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 0;
+  background: var(--sky-cloud);
+  color: var(--greyscale-950);
+  border: 1px solid var(--greyscale-950);
   font-family: var(--font-source-sans), sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   line-height: 1;
   white-space: nowrap;
-  mix-blend-mode: difference;
   opacity: 0;
 }
 
+/* Main cursor star — light core inside a 1.22x dark ink outline */
 .cursor-star {
-  z-index: 76;
-  width: 18px;
-  height: 18px;
-  color: #fff;
-  mix-blend-mode: difference;
+  z-index: 7;
+  width: 14px;
+  height: 14px;
+  color: var(--greyscale-50);
 }
 
 .cursor-star--shadow {
-  z-index: 75;
-  color: #046bec;
-  mix-blend-mode: normal;
+  z-index: 6;
+  color: var(--greyscale-950);
 }
 
 .cursor-star-svg {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 100%;
+  height: 100%;
+  shape-rendering: crispEdges;
 }
 
 .cursor-layer[data-active="false"] .cursor-star,

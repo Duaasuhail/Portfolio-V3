@@ -1,50 +1,40 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { FOOTER_SKY_VH, SKY_HEIGHT_VH } from "./GalaxyBackground";
 
-const TRAIL = 7;
+const SPARKLES = 14;
 
 type Mode = "default" | "link" | "view" | "explore" | "press";
 
+interface Sparkle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  decay: number;
+  scale: number;
+}
+
 function Star({ className }: { className: string }) {
   return (
-    <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
+    <svg className={className} viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden="true">
       <path
         fill="currentColor"
-        d="M16 1.1 19.15 12.85 30.9 16 19.15 19.15 16 30.9 12.85 19.15 1.1 16 12.85 12.85 Z"
+        d="M7 1h2v5h1v1h5v2h-5v1H9v5H7v-5H6V9H1V7h5V6h1V1z"
       />
     </svg>
   );
 }
 
-function galaxyHost(node: EventTarget | null): HTMLElement | null {
-  const el = node instanceof Element ? node : null;
-  return el?.closest<HTMLElement>(".hero, .site-footer") ?? null;
-}
-
-/** Matches the constellation pen zone in GalaxyBackground. Links keep the custom cursor. */
-function inGalaxy(clientY: number, node: EventTarget | null): HTMLElement | null {
-  const el = node instanceof Element ? node : null;
-  if (!el || el.closest("a[href], button, [role='button'], [data-cursor='view']")) return null;
-
-  const hero = el.closest<HTMLElement>(".hero");
-  if (hero) {
-    const y = clientY - hero.getBoundingClientRect().top;
-    return y <= window.innerHeight * SKY_HEIGHT_VH * 0.85 ? hero : null;
-  }
-
-  const footer = el.closest<HTMLElement>(".site-footer");
-  if (footer) {
-    const y = clientY - footer.getBoundingClientRect().top;
-    return y >= window.innerHeight * FOOTER_SKY_VH * 0.25 ? footer : null;
-  }
-
+function getElement(node: EventTarget | null): Element | null {
+  if (node instanceof Element) return node;
+  if (node instanceof Node) return node.parentElement;
   return null;
 }
 
 function resolveTarget(node: EventTarget | null): { mode: Mode; el: HTMLElement | null } {
-  const el = node instanceof Element ? node : null;
+  const el = getElement(node);
   if (!el) return { mode: "default", el: null };
 
   const view = el.closest<HTMLElement>("[data-cursor='view']");
@@ -77,41 +67,60 @@ export default function CustomCursor() {
     const pill = root.querySelector<HTMLElement>("[data-cursor-pill]");
     const pillShadow = root.querySelector<HTMLElement>("[data-cursor-pill-shadow]");
     const frame = root.querySelector<HTMLElement>("[data-cursor-frame]");
-    const dots = [...root.querySelectorAll<HTMLElement>("[data-cursor-dot]")];
+    const dots = Array.from(root.querySelectorAll<HTMLElement>("[data-cursor-dot]"));
     if (!star || !starShadow || !ring || !pill || !pillShadow || !frame) return;
 
     const mouse = { x: -100, y: -100, inside: false };
     const pos = { x: -100, y: -100 };
-    const trail = dots.map(() => ({ x: -100, y: -100 }));
+    const pool: Sparkle[] = dots.map(() => ({
+      x: -100,
+      y: -100,
+      vx: 0,
+      vy: 0,
+      life: 0,
+      decay: 0.04,
+      scale: 1,
+    }));
     const box = { x: 0, y: 0, w: 0, h: 0, o: 0 };
+    let cursorIdx = 0;
+    let distAccum = 0;
     let mode: Mode = "default";
     let target: HTMLElement | null = null;
     let label = "";
     let starScale = 1;
     let ringScale = 0;
-    let pillScale = 0.72;
+    let pillScale = 0.85;
     let pillOpacity = 0;
     let raf = 0;
     let primed = false;
     let motion = !reduced.matches;
-
     let allow = fine.matches;
-    let galaxyEl: HTMLElement | null = null;
 
     const customOn = () => document.documentElement.classList.contains("has-custom-cursor");
 
-    const setGalaxyCursor = (host: HTMLElement | null, active: boolean) => {
-      if (galaxyEl && galaxyEl !== host) galaxyEl.style.cursor = "";
-      galaxyEl = host;
-      if (!host) return;
-      const next = active ? "crosshair" : "";
-      if (host.style.cursor !== next) host.style.cursor = next;
+    const spawnSparkle = (x: number, y: number, speed: number) => {
+      if (!motion || dots.length === 0) return;
+      const p = pool[cursorIdx];
+      cursorIdx = (cursorIdx + 1) % pool.length;
+
+      const angle = Math.random() * Math.PI * 2;
+      const drift = 0.25 + Math.min(1.4, speed * 0.04) * Math.random();
+      const spread = 4 + Math.random() * 6;
+
+      p.x = x + Math.cos(angle) * spread;
+      p.y = y + Math.sin(angle) * spread;
+      p.vx = Math.cos(angle) * drift;
+      p.vy = Math.sin(angle) * drift - 0.15;
+      p.life = 1;
+      p.decay = 0.032 + Math.random() * 0.025;
+      p.scale = Math.random() > 0.35 ? 1 : 0.75;
     };
 
     const showCustom = (on: boolean) => {
-      document.documentElement.classList.toggle("has-custom-cursor", on && allow);
-      root.dataset.active = on && allow && mouse.inside ? "true" : "false";
-      if (!on && raf) {
+      const enabled = on && allow;
+      document.documentElement.classList.toggle("has-custom-cursor", enabled);
+      root.dataset.active = enabled && mouse.inside ? "true" : "false";
+      if (!enabled && raf) {
         cancelAnimationFrame(raf);
         raf = 0;
       }
@@ -120,15 +129,12 @@ export default function CustomCursor() {
     const setEnabled = () => {
       allow = fine.matches;
       motion = !reduced.matches;
-      if (!allow) {
-        showCustom(false);
-        setGalaxyCursor(galaxyEl, false);
-      }
+      if (!allow) showCustom(false);
     };
 
     const place = (el: HTMLElement, x: number, y: number, scale = 1, opacity?: number) => {
-      el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) scale(${scale})`;
-      if (opacity != null) el.style.opacity = String(opacity);
+      el.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0) translate(-50%, -50%) scale(${scale})`;
+      if (opacity !== undefined) el.style.opacity = String(opacity);
     };
 
     const syncLabel = (next: Mode) => {
@@ -151,120 +157,151 @@ export default function CustomCursor() {
     };
 
     const tick = () => {
+      const twinkle = p.life > 0.2 && p.life < 0.8 ? (Math.sin(p.life * 26) > 0 ? 1 : 0.7) : 1;
+const opacity = Math.min(1, p.life * 1.6) * twinkle * (showPill ? 0.45 : 1);
       if (!customOn() || !mouse.inside) {
         raf = 0;
         return;
       }
-      raf = requestAnimationFrame(tick);
 
       let tx = mouse.x;
       let ty = mouse.y;
-      if ((mode === "view" || mode === "explore") && target) {
+      if ((mode === "view" || mode === "explore") && target && target.isConnected) {
         const rect = target.getBoundingClientRect();
         const dx = rect.left + rect.width / 2 - mouse.x;
         const dy = rect.top + rect.height / 2 - mouse.y;
         const dist = Math.hypot(dx, dy) || 1;
-        const pull = Math.min(10, dist * 0.08);
+        const pull = Math.min(6, dist * 0.05);
         tx += (dx / dist) * pull;
         ty += (dy / dist) * pull;
       }
 
-      const follow = motion ? (mode === "press" ? 0.42 : 0.34) : 1;
+      const follow = motion ? (mode === "press" ? 0.45 : 0.38) : 1;
       pos.x += (tx - pos.x) * follow;
       pos.y += (ty - pos.y) * follow;
 
       const showPill = mode === "view" || mode === "explore";
-      const ease = motion ? 0.22 : 1;
-      starScale += ((showPill ? 0.2 : mode === "press" ? 1.5 : mode === "link" ? 1.28 : 1) - starScale) * ease;
-      ringScale += ((mode === "link" ? 1 : 0) - ringScale) * ease;
-      pillScale += ((showPill ? 1 : 0.72) - pillScale) * ease;
-      pillOpacity += ((showPill ? 1 : 0) - pillOpacity) * ease;
+      const targetStarScale = showPill ? 0.2 : mode === "press" ? 1.25 : mode === "link" ? 1.15 : 1;
+      const targetRingScale = mode === "link" ? 1 : 0;
+      const targetPillScale = showPill ? 1 : 0.85;
+      const targetPillOpacity = showPill ? 1 : 0;
+
+      const ease = motion ? 0.24 : 1;
+      starScale += (targetStarScale - starScale) * ease;
+      ringScale += (targetRingScale - ringScale) * ease;
+      pillScale += (targetPillScale - pillScale) * ease;
+      pillOpacity += (targetPillOpacity - pillOpacity) * ease;
 
       const starOpacity = showPill ? Math.max(0, 1 - pillOpacity) : 1;
-      place(starShadow, pos.x + 2, pos.y + 3, starScale, starOpacity);
+      place(starShadow, pos.x, pos.y, starScale * 1.22, starOpacity);
       place(star, pos.x, pos.y, starScale, starOpacity);
-      place(ring, pos.x, pos.y, 0.35 + ringScale * 0.65, ringScale);
-      place(pillShadow, pos.x + 3, pos.y + 3, pillScale, pillOpacity);
+      place(ring, pos.x, pos.y, 0.5 + ringScale * 0.5, ringScale);
+      place(pillShadow, pos.x + 2, pos.y + 2, pillScale, pillOpacity);
       place(pill, pos.x, pos.y, pillScale, pillOpacity);
 
-      const snap = motion ? 0.28 : 1;
-      if (mode === "press" && target) {
+      const snap = motion ? 0.3 : 1;
+      let targetBox = { x: pos.x, y: pos.y, w: 12, h: 12, o: 0 };
+      if (mode === "press" && target && target.isConnected) {
         const rect = target.getBoundingClientRect();
-        box.x += (rect.left - box.x) * snap;
-        box.y += (rect.top - box.y) * snap;
-        box.w += (rect.width - box.w) * snap;
-        box.h += (rect.height - box.h) * snap;
-        box.o += (1 - box.o) * snap;
-      } else {
-        box.x += (pos.x - box.x) * snap;
-        box.y += (pos.y - box.y) * snap;
-        box.w += (18 - box.w) * snap;
-        box.h += (18 - box.h) * snap;
-        box.o += (0 - box.o) * snap;
+        targetBox = { x: rect.left, y: rect.top, w: rect.width, h: rect.height, o: 1 };
       }
-      frame.style.transform = `translate3d(${box.x}px, ${box.y}px, 0)`;
-      frame.style.width = `${Math.max(0, box.w)}px`;
-      frame.style.height = `${Math.max(0, box.h)}px`;
+
+      box.x += (targetBox.x - box.x) * snap;
+      box.y += (targetBox.y - box.y) * snap;
+      box.w += (targetBox.w - box.w) * snap;
+      box.h += (targetBox.h - box.h) * snap;
+      box.o += (targetBox.o - box.o) * snap;
+
+      frame.style.transform = `translate3d(${Math.round(box.x)}px, ${Math.round(box.y)}px, 0)`;
+      frame.style.width = `${Math.max(0, Math.round(box.w))}px`;
+      frame.style.height = `${Math.max(0, Math.round(box.h))}px`;
       frame.style.opacity = String(Math.max(0, box.o));
 
-      let px = pos.x;
-      let py = pos.y;
+      let activeSparkles = 0;
       for (let i = 0; i < dots.length; i++) {
-        const point = trail[i];
-        const ease = 0.38 - i * 0.035;
-        point.x += (px - point.x) * ease;
-        point.y += (py - point.y) * ease;
-        const fade = motion ? (1 - i / dots.length) * (showPill ? 0.35 : 0.8) : 0;
-        dots[i].style.transform = `translate3d(${Math.round(point.x)}px, ${Math.round(point.y)}px, 0) translate(-50%, -50%)`;
-        dots[i].style.opacity = String(fade);
-        px = point.x;
-        py = point.y;
+        const p = pool[i];
+        if (p.life <= 0) {
+          dots[i].style.opacity = "0";
+          continue;
+        }
+        activeSparkles++;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.96;
+        p.vy *= 0.96;
+        p.life = Math.max(0, p.life - p.decay);
+
+        const twinkle = p.life > 0.25 && p.life < 0.75 ? (Math.sin(p.life * 28) > 0 ? 1 : 0.45) : 1;
+        const opacity = p.life * twinkle * (showPill ? 0.35 : 0.95);
+        const s = p.scale * (0.6 + p.life * 0.4);
+
+        dots[i].style.transform = `translate3d(${Math.round(p.x)}px, ${Math.round(p.y)}px, 0) translate(-50%, -50%) scale(${s.toFixed(2)})`;
+        dots[i].style.opacity = opacity.toFixed(2);
+      }
+
+      const settled =
+        activeSparkles === 0 &&
+        Math.abs(tx - pos.x) < 0.05 &&
+        Math.abs(ty - pos.y) < 0.05 &&
+        Math.abs(targetStarScale - starScale) < 0.005 &&
+        Math.abs(targetRingScale - ringScale) < 0.005 &&
+        Math.abs(targetPillOpacity - pillOpacity) < 0.005 &&
+        Math.abs(targetBox.o - box.o) < 0.005;
+
+      if (settled) {
+        raf = 0;
+      } else {
+        raf = requestAnimationFrame(tick);
       }
     };
 
-    const syncZone = (node: EventTarget | null) => {
-      const host = inGalaxy(mouse.y, node);
-      if (host) {
-        showCustom(false);
-        setGalaxyCursor(host, true);
-        return;
+    const startLoop = () => {
+      if (customOn() && mouse.inside && !raf) {
+        raf = requestAnimationFrame(tick);
       }
-      setGalaxyCursor(galaxyHost(node), false);
-      showCustom(true);
-      applyTarget(node);
     };
 
     const onMove = (event: PointerEvent) => {
       if (!allow) return;
+      const prevX = mouse.x;
+      const prevY = mouse.y;
       mouse.x = event.clientX;
       mouse.y = event.clientY;
       mouse.inside = true;
+
       if (!primed) {
         primed = true;
         pos.x = mouse.x;
         pos.y = mouse.y;
         box.x = mouse.x;
         box.y = mouse.y;
-        for (const point of trail) {
-          point.x = mouse.x;
-          point.y = mouse.y;
+      } else {
+        const dist = Math.hypot(mouse.x - prevX, mouse.y - prevY);
+        distAccum += dist;
+        if (distAccum >= 12) {
+          const count = dist > 40 ? 2 : 1;
+          for (let n = 0; n < count; n++) {
+            spawnSparkle(mouse.x, mouse.y, dist);
+          }
+          distAccum = 0;
         }
       }
-      syncZone(event.target);
-      if (customOn() && !raf) raf = requestAnimationFrame(tick);
+
+      showCustom(true);
+      applyTarget(event.target);
+      startLoop();
     };
 
     const onScroll = () => {
       if (!mouse.inside || !allow) return;
-      syncZone(document.elementFromPoint(mouse.x, mouse.y));
-      if (customOn() && !raf) raf = requestAnimationFrame(tick);
+      applyTarget(document.elementFromPoint(mouse.x, mouse.y));
+      startLoop();
     };
 
     const onLeave = (event: PointerEvent) => {
       if (event.relatedTarget) return;
       mouse.inside = false;
       showCustom(false);
-      setGalaxyCursor(null, false);
     };
 
     setEnabled();
@@ -287,11 +324,11 @@ export default function CustomCursor() {
 
   return (
     <div ref={rootRef} className="cursor-layer" data-state="default" data-active="false" aria-hidden="true">
-      {Array.from({ length: TRAIL }, (_, index) => (
+      {Array.from({ length: SPARKLES }, (_, index) => (
         <span
           key={index}
           data-cursor-dot
-          className={index < 2 ? "cursor-dot cursor-dot--star" : "cursor-dot cursor-dot--pixel"}
+          className={index % 2 === 0 ? "cursor-dot cursor-dot--star" : "cursor-dot cursor-dot--pixel"}
         />
       ))}
       <span data-cursor-frame className="cursor-frame" />
