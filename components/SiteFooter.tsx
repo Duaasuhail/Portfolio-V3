@@ -2,7 +2,7 @@ import GalaxyBackground from "./GalaxyBackground";
 import SkyShape from "./SkyShape";
 
 const contactLinks = [
-  { label: "LinkedIn", href: "https://www.linkedin.com/" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/duaasuhail/" },
   { label: "Email", href: "mailto:hello@duaasuhail.com" },
   { label: "Resume", href: "https://drive.google.com/file/d/1N0bpc18Pklr1DasmNaNBsTg3oyN3-Ix4/view?usp=sharing" },
 ] as const;
@@ -28,11 +28,20 @@ export default function SiteFooter() {
 
         <div className="site-footer-main">
           <ul className="site-footer-links site-footer-col site-footer-col--left">
-            {contactLinks.map((link) => (
-              <li key={link.label}>
-                <a href={link.href}>{link.label}</a>
-              </li>
-            ))}
+            {contactLinks.map((link) => {
+              const isExternal = link.href.startsWith("http");
+              return (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    target={isExternal ? "_blank" : undefined}
+                    rel={isExternal ? "noopener noreferrer" : undefined}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
 
           <ul className="site-footer-links site-footer-col site-footer-col--right">
