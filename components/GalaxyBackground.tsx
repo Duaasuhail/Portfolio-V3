@@ -17,8 +17,7 @@ const BAYER_8 = [
   [51, 19, 59, 27, 49, 17, 57, 25],
   [15, 47,  7, 39, 13, 45,  5, 37],
   [63, 31, 55, 23, 61, 29, 53, 21],
-];
-
+]
 const BITMAP_BLOCK_SIZE = 4;
 export const SKY_HEIGHT_VH = 1.4;
 export const FOOTER_SKY_VH = 1.15;
@@ -374,53 +373,6 @@ function drawStarShape(
   ctx.fill();
 }
 
-interface GlyphGradients {
-  glow: CanvasGradient;
-  flareH: CanvasGradient;
-  flareV: CanvasGradient;
-  glowR: number;
-  flareLen: number;
-}
-
-// Gradients are created once per star (alpha is applied via globalAlpha, which
-// multiplies exactly like scaling every color stop) instead of 5x per frame.
-const glyphGradients = new WeakMap<PlacedStar, GlyphGradients>();
-
-function getGlyphGradients(
-  ctx: CanvasRenderingContext2D,
-  star: PlacedStar,
-  base: number,
-): GlyphGradients {
-  const cached = glyphGradients.get(star);
-  if (cached) return cached;
-
-  const glowR = base * 2.2 + 2;
-  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, glowR);
-  glow.addColorStop(0, "rgba(255, 255, 255, 0.95)");
-  glow.addColorStop(0.2, "rgba(215, 235, 255, 0.45)");
-  glow.addColorStop(0.6, "rgba(124, 206, 253, 0.08)");
-  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-
-  const flareLen = base * 3.4 + 2;
-  const makeFlare = (x: number, y: number) => {
-    const g = ctx.createLinearGradient(-x, -y, x, y);
-    g.addColorStop(0, "rgba(255,255,255,0)");
-    g.addColorStop(0.5, "rgba(255,255,255,0.85)");
-    g.addColorStop(1, "rgba(255,255,255,0)");
-    return g;
-  };
-
-  const made = {
-    glow,
-    flareH: makeFlare(flareLen, 0),
-    flareV: makeFlare(0, flareLen),
-    glowR,
-    flareLen,
-  };
-  glyphGradients.set(star, made);
-  return made;
-}
-
 function drawPlacedStarGlyph(ctx: CanvasRenderingContext2D, star: PlacedStar) {
   const cx = star.x;
   const cy = star.y;
@@ -429,34 +381,38 @@ function drawPlacedStarGlyph(ctx: CanvasRenderingContext2D, star: PlacedStar) {
   const spin = star.twinklePhase * 0.08;
   const alpha = 0.85 + 0.15 * Math.sin(star.twinklePhase);
 
-  const g = getGlyphGradients(ctx, star, base);
-
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.globalAlpha = alpha;
-
-  ctx.fillStyle = g.glow;
+  const glowR = base * 2.2 + 2;
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+  glow.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.95})`);
+  glow.addColorStop(0.2, `rgba(215, 235, 255, ${alpha * 0.45})`);
+  glow.addColorStop(0.6, `rgba(124, 206, 253, ${alpha * 0.08})`);
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(0, 0, g.glowR, 0, Math.PI * 2);
+  ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
   ctx.fill();
 
-  // Original drew 4 arms; opposite arms were the same full-length line, so
-  // each axis is stroked twice to keep the exact same intensity.
+  const flareLen = base * 3.4 + 2;
+  ctx.save();
+  ctx.translate(cx, cy);
   ctx.rotate(spin * 0.5);
   ctx.lineCap = "round";
-  ctx.lineWidth = 2.55;
-  const f = g.flareLen;
   for (let i = 0; i < 4; i++) {
-    const horizontal = i % 2 === 0;
-    ctx.strokeStyle = horizontal ? g.flareH : g.flareV;
+    const a = (i * Math.PI) / 2;
+    const grad = ctx.createLinearGradient(
+      Math.cos(a) * -flareLen,
+      Math.sin(a) * -flareLen,
+      Math.cos(a) * flareLen,
+      Math.sin(a) * flareLen,
+    );
+    grad.addColorStop(0, "rgba(255,255,255,0)");
+    grad.addColorStop(0.5, `rgba(255,255,255,${alpha * 0.85})`);
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2.55;
     ctx.beginPath();
-    if (horizontal) {
-      ctx.moveTo(-f, 0);
-      ctx.lineTo(f, 0);
-    } else {
-      ctx.moveTo(0, -f);
-      ctx.lineTo(0, f);
-    }
+    ctx.moveTo(Math.cos(a) * -flareLen, Math.sin(a) * -flareLen);
+    ctx.lineTo(Math.cos(a) * flareLen, Math.sin(a) * flareLen);
     ctx.stroke();
   }
   ctx.restore();
@@ -469,7 +425,8 @@ function drawPlacedStarGlyph(ctx: CanvasRenderingContext2D, star: PlacedStar) {
   ctx.fill();
 }
 
-function drawConstellations(
+function drawConstellations(ctx: CanvasRenderingContext2D, placed: PlacedStar[]) {
+  function drawConstellations(
   ctx: CanvasRenderingContext2D,
   placed: PlacedStar[],
   edges: { i: number; j: number; d: number }[],
@@ -578,30 +535,23 @@ export default function GalaxyBackground({
     let hostW = 0;
     let hostH = 0;
     let raf = 0;
-    let lastPaint = 0;
-    let lastTs = 0;
-    let ambientStars: AmbientStar[] = [];
-
-    // Cached nebula layer (recomputed ~10fps; the drift is very slow)
     let nebula: ImageData | null = null;
     let frame: ImageData | null = null;
     let lastNebulaMs = -Infinity;
-    let ready = false; // flips true after the first painted frame
-    let nebulaBack: ImageData | null = null; // buffer being built in the background
-    let nebulaJob: { buf: ImageData; run: (budgetMs: number) => boolean } | null = null;
-    const NEBULA_MS = 60; // idle gap between nebula passes
-    const NEBULA_BUDGET_MS = 4; // max ms of nebula work per frame (keeps clicks snappy)
-    const NEBULA_FIRST_BUDGET_MS = 10; // slightly larger while the first pass loads
+    const NEBULA_MS = 100; // ~10fps, tune 80–150
+    let lastPaint = 0;
+    let lastTs = 0;
+    let ambientStars: AmbientStar[] = [];
 
     // Constellation state
     let placedStars: PlacedStar[] = [];
     let nextStarId = 1;
     let nextShapeId = 1;
     let penStar: PlacedStar | null = null;
+    let edgeCache: ReturnType<typeof collectForcedEdges> | null = null;
     let pathOrigin: PlacedStar | null = null;
     let strokeLen = 0;
     let pointer: { x: number; y: number; active: boolean } | null = null;
-    let edgeCache: ReturnType<typeof collectForcedEdges> | null = null;
 
     // Shooting stars state
     let shooting: ShootingStar[] = [];
@@ -645,23 +595,6 @@ export default function GalaxyBackground({
 
     const host = bitmapCanvas.parentElement;
 
-    // Pause all work when offscreen or the tab is hidden
-    let inView = true;
-    let pageVisible = document.visibilityState === "visible";
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        inView = entry.isIntersecting;
-      },
-      { threshold: 0 },
-    );
-    io.observe(host ?? bitmapCanvas);
-
-    const onVisibility = () => {
-      pageVisible = document.visibilityState === "visible";
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-
     const liftPen = () => {
       penStar = null;
       pathOrigin = null;
@@ -670,7 +603,6 @@ export default function GalaxyBackground({
 
     const linkStars = (from: PlacedStar, to: PlacedStar) => {
       if (from.id === to.id) return;
-      edgeCache = null;
       to.linkIds = to.linkIds ?? [];
       if (!to.linkIds.includes(from.id)) to.linkIds.push(from.id);
     };
@@ -716,11 +648,6 @@ export default function GalaxyBackground({
       starsCanvas.style.height = `${hostH}px`;
 
       ambientStars = generateAmbientStars(gridW, gridH);
-      nebula = null;
-      nebulaBack = null;
-      nebulaJob = null;
-      frame = null;
-      lastNebulaMs = -Infinity;
 
       if (prevW > 0 && prevH > 0) {
         const sx = hostW / prevW;
@@ -729,7 +656,6 @@ export default function GalaxyBackground({
           s.x *= sx;
           s.y *= sy;
         }
-        edgeCache = null;
       }
     };
 
@@ -746,10 +672,7 @@ export default function GalaxyBackground({
       const { x, y } = canvasPoint(event);
       const active = isFooter ? y >= hostH * 0.25 : y <= hostH * 0.85;
       pointer = { x, y, active };
-      if (host) {
-        const cur = active ? "crosshair" : "";
-        if (host.style.cursor !== cur) host.style.cursor = cur;
-      }
+      if (host) host.style.cursor = active ? "crosshair" : "";
     };
 
     const onPointerLeave = () => {
@@ -829,7 +752,6 @@ export default function GalaxyBackground({
 
         if (penStar) linkStars(penStar, newStar);
         placedStars.push(newStar);
-        edgeCache = null;
         if (!penStar) {
           pathOrigin = newStar;
           strokeLen = 1;
@@ -860,7 +782,6 @@ export default function GalaxyBackground({
         strokeLen = 1;
       }
       placedStars.push(newStar);
-      edgeCache = null;
       penStar = newStar;
     };
 
@@ -879,187 +800,129 @@ export default function GalaxyBackground({
     };
 
     const render = (timeSec: number, dt: number) => {
-      const nowMs = timeSec * 1000;
+      const img = bitmapCtx.createImageData(gridW, gridH);
+      const data = img.data;
 
-      // Nebula is built in small time slices across frames so it never blocks
-      // the main thread (clicks, scrolling) for more than a few ms at a time.
-      if (!nebulaJob && (!nebula || nowMs - lastNebulaMs >= NEBULA_MS)) {
-        const buf = (nebulaBack ??= bitmapCtx.createImageData(gridW, gridH));
-        const nd = buf.data;
+      const ambientEl = host?.querySelector<HTMLElement>(".sky-ambient") || host;
 
-        const ambientEl = host?.querySelector<HTMLElement>(".sky-ambient") || host;
+      const SPEED_DAMP = 0.08;
+      const internalTimeDriftX = timeSec * 0.006;
+      const internalTimeDriftY = Math.sin(timeSec * 0.005) * 0.01;
 
-        const SPEED_DAMP = 0.08;
-        const internalTimeDriftX = timeSec * 0.006;
-        const internalTimeDriftY = Math.sin(timeSec * 0.005) * 0.01;
+      const dx1 = (ambientEl ? parseCssPercent(ambientEl, "--drift-x1", 0) : 0) * SPEED_DAMP + internalTimeDriftX;
+      const dy1 = (ambientEl ? parseCssPercent(ambientEl, "--drift-y1", 0) : 0) * SPEED_DAMP + internalTimeDriftY;
+      const dx2 = (ambientEl ? parseCssPercent(ambientEl, "--drift-x2", 0) : 0) * SPEED_DAMP - internalTimeDriftX * 0.6;
+      const dy2 = (ambientEl ? parseCssPercent(ambientEl, "--drift-y2", 0) : 0) * SPEED_DAMP - internalTimeDriftY * 0.6;
+      const dhx = (ambientEl ? parseCssPercent(ambientEl, "--drift-hx", 0) : 0) * SPEED_DAMP + internalTimeDriftX * 0.4;
+      const dhy = (ambientEl ? parseCssPercent(ambientEl, "--drift-hy", 0) : 0) * SPEED_DAMP + internalTimeDriftY * 0.4;
 
-        const dx1 = (ambientEl ? parseCssPercent(ambientEl, "--drift-x1", 0) : 0) * SPEED_DAMP + internalTimeDriftX;
-        const dy1 = (ambientEl ? parseCssPercent(ambientEl, "--drift-y1", 0) : 0) * SPEED_DAMP + internalTimeDriftY;
-        const dx2 = (ambientEl ? parseCssPercent(ambientEl, "--drift-x2", 0) : 0) * SPEED_DAMP - internalTimeDriftX * 0.6;
-        const dy2 = (ambientEl ? parseCssPercent(ambientEl, "--drift-y2", 0) : 0) * SPEED_DAMP - internalTimeDriftY * 0.6;
-        const dhx = (ambientEl ? parseCssPercent(ambientEl, "--drift-hx", 0) : 0) * SPEED_DAMP + internalTimeDriftX * 0.4;
-        const dhy = (ambientEl ? parseCssPercent(ambientEl, "--drift-hy", 0) : 0) * SPEED_DAMP + internalTimeDriftY * 0.4;
+      const f1x = (ambientEl ? parseCssPercent(ambientEl, "--flare-x1", 0.2) : 0.2) + Math.sin(timeSec * 0.015) * 0.02;
+      const f1y = ambientEl ? parseCssPercent(ambientEl, "--flare-y1", 0.12) : 0.12;
+      const f1o = ambientEl ? parseCssFloat(ambientEl, "--flare-o1", 0.4) : 0.4;
 
-        const f1x = (ambientEl ? parseCssPercent(ambientEl, "--flare-x1", 0.2) : 0.2) + Math.sin(timeSec * 0.015) * 0.02;
-        const f1y = ambientEl ? parseCssPercent(ambientEl, "--flare-y1", 0.12) : 0.12;
-        const f1o = ambientEl ? parseCssFloat(ambientEl, "--flare-o1", 0.4) : 0.4;
+      const f2x = (ambientEl ? parseCssPercent(ambientEl, "--flare-x2", 0.65) : 0.65) + Math.cos(timeSec * 0.012) * 0.025;
+      const f2y = ambientEl ? parseCssPercent(ambientEl, "--flare-y2", 0.16) : 0.16;
+      const f2o = ambientEl ? parseCssFloat(ambientEl, "--flare-o2", 0.35) : 0.35;
 
-        const f2x = (ambientEl ? parseCssPercent(ambientEl, "--flare-x2", 0.65) : 0.65) + Math.cos(timeSec * 0.012) * 0.025;
-        const f2y = ambientEl ? parseCssPercent(ambientEl, "--flare-y2", 0.16) : 0.16;
-        const f2o = ambientEl ? parseCssFloat(ambientEl, "--flare-o2", 0.35) : 0.35;
+      const f3x = (ambientEl ? parseCssPercent(ambientEl, "--flare-x3", 0.42) : 0.42) + Math.sin(timeSec * 0.01) * 0.02;
+      const f3y = ambientEl ? parseCssPercent(ambientEl, "--flare-y3", 0.24) : 0.24;
+      const f3o = ambientEl ? parseCssFloat(ambientEl, "--flare-o3", 0.45) : 0.45;
 
-        const f3x = (ambientEl ? parseCssPercent(ambientEl, "--flare-x3", 0.42) : 0.42) + Math.sin(timeSec * 0.01) * 0.02;
-        const f3y = ambientEl ? parseCssPercent(ambientEl, "--flare-y3", 0.24) : 0.24;
-        const f3o = ambientEl ? parseCssFloat(ambientEl, "--flare-o3", 0.45) : 0.45;
+      const f5x = ambientEl ? parseCssPercent(ambientEl, "--flare-x5", 0.5) : 0.5;
+      const f5y = ambientEl ? parseCssPercent(ambientEl, "--flare-y5", 0.26) : 0.26;
+      const f5o = ambientEl ? parseCssFloat(ambientEl, "--flare-o5", 0.65) : 0.65;
 
-        const f5x = ambientEl ? parseCssPercent(ambientEl, "--flare-x5", 0.5) : 0.5;
-        const f5y = ambientEl ? parseCssPercent(ambientEl, "--flare-y5", 0.26) : 0.26;
-        const f5o = ambientEl ? parseCssFloat(ambientEl, "--flare-o5", 0.65) : 0.65;
+      for (let y = 0; y < gridH; y++) {
+        const ny = y / Math.max(1, gridH - 1);
+        const yNorm = isFooter ? 1 - ny : ny;
 
-        const hillCol = new Float64Array(gridW);
         for (let x = 0; x < gridW; x++) {
           const nx = x / Math.max(1, gridW - 1);
-          hillCol[x] =
-            Math.sin((nx + dhx) * Math.PI * 3.0) * 0.075 +
-            Math.sin((nx * 2.0 - dx1) * Math.PI * 4.5) * 0.035 +
-            dhy * 0.45;
-        }
 
-        let row = 0;
-        nebulaJob = {
-          buf,
-          run: (budgetMs: number) => {
-            const startedAt = performance.now();
-            while (row < gridH) {
-              const y = row;
-              const ny = y / Math.max(1, gridH - 1);
-              const yNorm = isFooter ? 1 - ny : ny;
+          const hillMacro = Math.sin((nx + dhx) * Math.PI * 3.0) * 0.075;
+          const hillMeso = Math.sin((nx * 2.0 - dx1) * Math.PI * 4.5) * 0.035;
+          const hillProfile = hillMacro + hillMeso + dhy * 0.45;
 
-              for (let x = 0; x < gridW; x++) {
-                const nx = x / Math.max(1, gridW - 1);
+          const horizonCut = 0.69 + hillProfile;
+          const hillFade = 1 - smoothstep(horizonCut - 0.14, horizonCut + 0.04, yNorm);
 
-                const hillProfile = hillCol[x];
+          const wx = nx + (fbm((nx + dx1) * 2.2, (yNorm + dy1) * 2.2, 2) - 0.5) * 0.12;
+          const wy = yNorm + (fbm((nx + dx2) * 2.2 + 1.4, (yNorm + dy2) * 2.2 + 0.8, 2) - 0.5) * 0.09;
 
-                const horizonCut = 0.69 + hillProfile;
-                const hillFade = 1 - smoothstep(horizonCut - 0.14, horizonCut + 0.04, yNorm);
+          const gasShape = fbm(wx * 3.4 + dx1, wy * 2.8 + dy1, 3);
+          const gasDetail = fbm(wx * 7.2 - dx2, wy * 5.8 - dy2, 2);
+          const gas = gasShape * 0.65 + gasDetail * 0.35;
 
-                // Fully transparent pixel: skip the expensive noise work
-                if (hillFade <= 0) {
-                  const i0 = (y * gridW + x) * 4;
-                  nd[i0] = 255;
-                  nd[i0 + 1] = 255;
-                  nd[i0 + 2] = 255;
-                  nd[i0 + 3] = 0;
-                  continue;
-                }
+          const elevation = Math.min(
+            1,
+            Math.max(0, yNorm + (gas - 0.5) * 0.22 + hillProfile * 0.18),
+          );
 
-                const wx = nx + (fbm((nx + dx1) * 2.2, (yNorm + dy1) * 2.2, 2) - 0.5) * 0.12;
-                const wy = yNorm + (fbm((nx + dx2) * 2.2 + 1.4, (yNorm + dy2) * 2.2 + 0.8, 2) - 0.5) * 0.09;
+          let [r, g, b] = getSkyGradientColor(elevation, skyStops);
 
-                const gasShape = fbm(wx * 3.4 + dx1, wy * 2.8 + dy1, 3);
-                const gasDetail = fbm(wx * 7.2 - dx2, wy * 5.8 - dy2, 2);
-                const gas = gasShape * 0.65 + gasDetail * 0.35;
+          const flare1 = Math.exp(-Math.hypot(nx - f1x, yNorm - f1y) / 0.16) * f1o;
+          const flare2 = Math.exp(-Math.hypot(nx - f2x, yNorm - f2y) / 0.2) * f2o;
+          const flare3 = Math.exp(-Math.hypot(nx - f3x, yNorm - f3y) / 0.22) * f3o;
+          const coreGlow = Math.exp(-Math.hypot(nx - f5x, yNorm - f5y) / 0.15) * f5o;
+          const flareTotal = flare1 + flare2 + flare3;
 
-                const elevation = Math.min(
-                  1,
-                  Math.max(0, yNorm + (gas - 0.5) * 0.22 + hillProfile * 0.18),
-                );
+          const dustDepth = Math.pow(Math.max(0, 0.45 - gas), 1.8) * 1.6;
+          r = lerp(r, cosmicViolet[0], dustDepth * 0.35);
+          g = lerp(g, cosmicViolet[1], dustDepth * 0.25);
+          b = lerp(b, cosmicViolet[2], dustDepth * 0.45);
 
-                let [r, g, b] = getSkyGradientColor(elevation, skyStops);
+          r = lerp(r, galacticCoreWarm[0], coreGlow * 0.4);
+          g = lerp(g, galacticCoreWarm[1], coreGlow * 0.25);
+          b = lerp(b, galacticCoreWarm[2], coreGlow * 0.15);
 
-                const flare1 = Math.exp(-Math.sqrt((nx - f1x) ** 2 + (yNorm - f1y) ** 2) / 0.16) * f1o;
-                const flare2 = Math.exp(-Math.sqrt((nx - f2x) ** 2 + (yNorm - f2y) ** 2) / 0.2) * f2o;
-                const flare3 = Math.exp(-Math.sqrt((nx - f3x) ** 2 + (yNorm - f3y) ** 2) / 0.22) * f3o;
-                const coreGlow = Math.exp(-Math.sqrt((nx - f5x) ** 2 + (yNorm - f5y) ** 2) / 0.15) * f5o;
-                const flareTotal = flare1 + flare2 + flare3;
+          r = lerp(r, bright[0], flareTotal * 0.45);
+          g = lerp(g, bright[1], flareTotal * 0.4);
+          b = lerp(b, bright[2], flareTotal * 0.6);
 
-                const dustDepth = Math.pow(Math.max(0, 0.45 - gas), 1.8) * 1.6;
-                r = lerp(r, cosmicViolet[0], dustDepth * 0.35);
-                g = lerp(g, cosmicViolet[1], dustDepth * 0.25);
-                b = lerp(b, cosmicViolet[2], dustDepth * 0.45);
+          const crestBlend = smoothstep(0.44, horizonCut, yNorm);
+          r = lerp(r, horizon[0], crestBlend * 0.7);
+          g = lerp(g, horizon[1], crestBlend * 0.7);
+          b = lerp(b, horizon[2], crestBlend * 0.7);
 
-                r = lerp(r, galacticCoreWarm[0], coreGlow * 0.4);
-                g = lerp(g, galacticCoreWarm[1], coreGlow * 0.25);
-                b = lerp(b, galacticCoreWarm[2], coreGlow * 0.15);
+          r = ditherChannel(Math.min(1, Math.max(0, r / 255)), x, y, 16) * 255;
+          g = ditherChannel(Math.min(1, Math.max(0, g / 255)), x, y, 16) * 255;
+          b = ditherChannel(Math.min(1, Math.max(0, b / 255)), x, y, 16) * 255;
 
-                r = lerp(r, bright[0], flareTotal * 0.45);
-                g = lerp(g, bright[1], flareTotal * 0.4);
-                b = lerp(b, bright[2], flareTotal * 0.6);
+          const baseAlpha = smoothstep(0.01, 0.08, yNorm);
+          const rawAlpha = hillFade * baseAlpha * (0.68 + gas * 0.28 + coreGlow * 0.15);
+          const ditheredAlpha = ditherChannel(Math.min(1, Math.max(0, rawAlpha)), x, y, 16);
 
-                const crestBlend = smoothstep(0.44, horizonCut, yNorm);
-                r = lerp(r, horizon[0], crestBlend * 0.7);
-                g = lerp(g, horizon[1], crestBlend * 0.7);
-                b = lerp(b, horizon[2], crestBlend * 0.7);
-
-                r = ditherChannel(Math.min(1, Math.max(0, r / 255)), x, y, 16) * 255;
-                g = ditherChannel(Math.min(1, Math.max(0, g / 255)), x, y, 16) * 255;
-                b = ditherChannel(Math.min(1, Math.max(0, b / 255)), x, y, 16) * 255;
-
-                const baseAlpha = smoothstep(0.01, 0.08, yNorm);
-                const rawAlpha = hillFade * baseAlpha * (0.68 + gas * 0.28 + coreGlow * 0.15);
-                const ditheredAlpha = ditherChannel(Math.min(1, Math.max(0, rawAlpha)), x, y, 16);
-
-                const idx = (y * gridW + x) * 4;
-                nd[idx] = r;
-                nd[idx + 1] = g;
-                nd[idx + 2] = b;
-                nd[idx + 3] = Math.round(ditheredAlpha * 255);
-              }
-
-              row++;
-              if (performance.now() - startedAt >= budgetMs) break;
-            }
-            return row >= gridH;
-          },
-        };
-      }
-
-      if (nebulaJob) {
-        const done = nebulaJob.run(nebula ? NEBULA_BUDGET_MS : NEBULA_FIRST_BUDGET_MS);
-        if (done) {
-          const finished = nebulaJob.buf;
-          nebulaBack = nebula; // recycle the old layer as the next back buffer
-          nebula = finished;
-          nebulaJob = null;
-          lastNebulaMs = nowMs;
+          const idx = (y * gridW + x) * 4;
+          data[idx] = r;
+          data[idx + 1] = g;
+          data[idx + 2] = b;
+          data[idx + 3] = Math.round(ditheredAlpha * 255);
         }
       }
 
-      if (nebula) {
-        const frameImg = (frame ??= bitmapCtx.createImageData(gridW, gridH));
-        const data = frameImg.data;
-        data.set(nebula.data);
+      for (let i = 0; i < ambientStars.length; i++) {
+        const s = ambientStars[i];
 
-        for (let i = 0; i < ambientStars.length; i++) {
-          const s = ambientStars[i];
+        let curGx = Math.floor((s.baseX + s.vx * timeSec) % gridW);
+        let curGy = Math.floor((s.baseY + s.vy * timeSec) % gridH);
+        if (curGx < 0) curGx += gridW;
+        if (curGy < 0) curGy += gridH;
 
-          let curGx = Math.floor((s.baseX + s.vx * timeSec) % gridW);
-          let curGy = Math.floor((s.baseY + s.vy * timeSec) % gridH);
-          if (curGx < 0) curGx += gridW;
-          if (curGy < 0) curGy += gridH;
+        const primary = 0.5 + 0.5 * Math.sin(timeSec * s.primarySpeed + s.phase);
+        const shimmer = 0.5 + 0.5 * Math.sin(timeSec * s.shimmerSpeed + s.phase * 1.5);
+        const combined = Math.pow(primary * 0.7 + shimmer * 0.3, 2.6);
+        const alpha = s.maxAlpha * (0.05 + 0.95 * combined);
 
-          const primary = 0.5 + 0.5 * Math.sin(timeSec * s.primarySpeed + s.phase);
-          const shimmer = 0.5 + 0.5 * Math.sin(timeSec * s.shimmerSpeed + s.phase * 1.5);
-          const combined = Math.pow(primary * 0.7 + shimmer * 0.3, 2.6);
-          const alpha = s.maxAlpha * (0.05 + 0.95 * combined);
-
-          if (curGx >= 0 && curGx < gridW && curGy >= 0 && curGy < gridH) {
-            const idx = (curGy * gridW + curGx) * 4;
-            data[idx] = Math.min(255, lerp(data[idx], pureStarWhite[0], alpha));
-            data[idx + 1] = Math.min(255, lerp(data[idx + 1], pureStarWhite[1], alpha));
-            data[idx + 2] = Math.min(255, lerp(data[idx + 2], pureStarWhite[2], alpha));
-            data[idx + 3] = Math.max(data[idx + 3], Math.round(alpha * 255));
-          }
-        }
-
-        bitmapCtx.putImageData(frameImg, 0, 0);
-
-        // Fade the nebula in once its first frame exists (no pop on load)
-        if (!ready) {
-          ready = true;
-          bitmapCanvas.style.opacity = "1";
+        if (curGx >= 0 && curGx < gridW && curGy >= 0 && curGy < gridH) {
+          const idx = (curGy * gridW + curGx) * 4;
+          data[idx] = Math.min(255, lerp(data[idx], pureStarWhite[0], alpha));
+          data[idx + 1] = Math.min(255, lerp(data[idx + 1], pureStarWhite[1], alpha));
+          data[idx + 2] = Math.min(255, lerp(data[idx + 2], pureStarWhite[2], alpha));
+          data[idx + 3] = Math.max(data[idx + 3], Math.round(alpha * 255));
         }
       }
+
+      bitmapCtx.putImageData(img, 0, 0);
 
       // Render foreground interactive constellation & shooting star canvas
       starsCtx.clearRect(0, 0, hostW, hostH);
@@ -1104,8 +967,7 @@ export default function GalaxyBackground({
         }
       }
 
-      edgeCache ??= collectForcedEdges(placedStars);
-      drawConstellations(starsCtx, placedStars, edgeCache);
+      drawConstellations(starsCtx, placedStars);
       for (const star of placedStars) {
         star.twinklePhase += 0.04;
         drawPlacedStarGlyph(starsCtx, star);
@@ -1115,10 +977,6 @@ export default function GalaxyBackground({
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
-      if (!inView || !pageVisible) {
-        lastTs = 0;
-        return;
-      }
       const dt = lastTs ? Math.min(0.05, (now - lastTs) / 1000) : 0.016;
       lastTs = now;
 
@@ -1138,8 +996,6 @@ export default function GalaxyBackground({
 
     return () => {
       cancelAnimationFrame(raf);
-      io.disconnect();
-      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", resize);
       window.removeEventListener("keydown", onKeyDown);
       host?.removeEventListener("click", onClick);
@@ -1154,7 +1010,7 @@ export default function GalaxyBackground({
     <>
       <canvas
         ref={bitmapRef}
-        className="galaxy-canvas galaxy-canvas--bitmap pointer-events-none absolute inset-0 z-[1] opacity-0 transition-opacity duration-700 [image-rendering:pixelated]"
+        className="galaxy-canvas galaxy-canvas--bitmap pointer-events-none absolute inset-0 z-[1] [image-rendering:pixelated]"
         aria-hidden="true"
       />
       <canvas
