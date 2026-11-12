@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import SiteFooter from "@/components/SiteFooter";
+import SiteNav from "@/components/SiteNav";
 
 export const metadata: Metadata = {
   title: "DSA 26/27 Branding - Duaa Suhail",
@@ -54,22 +54,7 @@ function CaseImage({
 export default function DsaBrandingCaseStudy() {
   return (
     <div className="case-study">
-      <header className="case-study-nav page-shell flex items-center justify-between">
-        <Link href="/" className="text-nav whitespace-nowrap">
-          Duaa Suhail
-        </Link>
-        <nav className="flex items-center gap-12">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-nav whitespace-nowrap transition-opacity hover:opacity-70"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
+      <SiteNav links={navLinks} />
 
       <main className="case-study-main">
         <div className="case-study-content">

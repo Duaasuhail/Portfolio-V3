@@ -1,8 +1,8 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import FeltSurveyResponses from "@/components/FeltSurveyResponses";
 import SiteFooter from "@/components/SiteFooter";
+import SiteNav from "@/components/SiteNav";
 
 export const metadata: Metadata = {
   title: "felt. -Duaa Suhail",
@@ -328,22 +328,7 @@ function FeatureCopy({
 export default function FeltPage() {
   return (
     <div className="case-study felt">
-      <header className="case-study-nav page-shell flex items-center justify-between">
-        <Link href="/" className="text-nav whitespace-nowrap">
-          Duaa Suhail
-        </Link>
-        <nav className="flex items-center gap-12">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-nav whitespace-nowrap transition-opacity hover:opacity-70"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
+      <SiteNav links={navLinks} />
 
       <main className="felt-main">
         <section className="felt-hero">

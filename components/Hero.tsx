@@ -1,11 +1,6 @@
 import GalaxyBackground from "./GalaxyBackground";
 import SkyShape from "./SkyShape";
 
-const navLinks = [
-  { label: "Work", href: "#work" },
-  { label: "About", href: "/about" },
-];
-
 // Same sky style as before — ends sooner (cream tip higher)
 export const HERO_VH = 140;
 
@@ -19,23 +14,7 @@ export default function Hero() {
       <GalaxyBackground />
 
       <div className="relative z-10 flex h-screen w-full flex-col">
-        <header
-          className="page-shell flex items-center justify-between"
-          style={{ paddingTop: "var(--nav-top)" }}
-        >
-          <span className="text-nav whitespace-nowrap">Duaa Suhail</span>
-          <nav className="flex items-center gap-12">
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="text-nav whitespace-nowrap transition-opacity hover:opacity-70"
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
-        </header>
+        <div className="site-nav-spacer" aria-hidden="true" />
 
         <main className="flex flex-1 flex-col items-center justify-center px-[var(--page-gutter)] text-center">
           <h1 className="text-h1">

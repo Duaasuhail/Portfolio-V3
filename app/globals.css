@@ -654,6 +654,37 @@ html[data-sky-quality="low"] .sky-layer--flare {
   letter-spacing: 0;
 }
 
+/* White type, differenced with the page, so it flips over light, dark, and image. */
+.site-nav {
+  position: fixed;
+  top: var(--nav-top);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+.site-nav-link {
+  color: #fff;
+  text-decoration: none;
+  pointer-events: auto;
+  transition: opacity 0.2s ease;
+}
+
+.site-nav-link:hover {
+  opacity: 0.7;
+}
+
+.site-nav-spacer {
+  height: calc(var(--nav-top) + 14px);
+  flex-shrink: 0;
+}
+
 .text-body {
   font-family: var(--font-source-sans), sans-serif;
   font-size: 16px;
@@ -704,19 +735,6 @@ html[data-sky-quality="low"] .sky-layer--flare {
   min-height: 100vh;
   background: var(--surface);
   color: var(--greyscale-950);
-}
-
-.case-study-nav {
-  position: absolute;
-  top: var(--nav-top);
-  left: 0;
-  right: 0;
-  z-index: 10;
-}
-
-.case-study-nav a {
-  color: var(--greyscale-950);
-  text-decoration: none;
 }
 
 .case-study-main {
@@ -1724,22 +1742,6 @@ html[data-sky-quality="low"] .sky-layer--flare {
   background-repeat: repeat;
 }
 
-.about-nav {
-  position: absolute;
-  top: var(--nav-top);
-  left: 0;
-  right: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.about-nav a {
-  color: #171717;
-  text-decoration: none;
-}
-
 .about-body {
   position: relative;
   z-index: 10;
@@ -1814,10 +1816,53 @@ html[data-sky-quality="low"] .sky-layer--flare {
   max-width: none;
 }
 
-.about-experience {
+.about-experience,
+.about-awards {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
+}
+
+.about-experience .about-section-title,
+.about-awards .about-section-title {
+  line-height: 32px;
+}
+
+.about-award {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.about-award-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.about-award-name,
+.about-award-year,
+.about-award-detail {
+  margin: 0;
+  font-family: var(--font-source-sans), sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22.5px;
+}
+
+.about-award-name,
+.about-award-year {
+  color: #6b6b6b;
+}
+
+.about-award-year {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.about-award-detail {
+  color: #171717;
 }
 
 .about-section-title {
@@ -2031,4 +2076,123 @@ html[data-sky-quality="low"] .sky-layer--flare {
   .about-thanks {
     font-size: 20px;
   }
+}
+
+/* Custom cursor — fine pointers only, and never over the galaxy pen zone. */
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  cursor: none !important;
+}
+
+.cursor-layer {
+  display: none;
+  pointer-events: none;
+}
+
+html.has-custom-cursor .cursor-layer {
+  display: contents;
+}
+
+.cursor-star,
+.cursor-ring,
+.cursor-pill,
+.cursor-pill-shadow,
+.cursor-frame,
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.cursor-dot {
+  z-index: 70;
+  opacity: 0;
+}
+
+.cursor-dot--star {
+  width: 7px;
+  height: 7px;
+  background: #7ccefd;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+
+.cursor-dot--pixel {
+  width: 2px;
+  height: 2px;
+  background: #046bec;
+}
+
+.cursor-frame {
+  z-index: 71;
+  box-sizing: border-box;
+  border: 1.5px solid #fff;
+  mix-blend-mode: difference;
+  opacity: 0;
+}
+
+.cursor-ring {
+  z-index: 72;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  mix-blend-mode: difference;
+  opacity: 0;
+}
+
+.cursor-pill-shadow {
+  z-index: 73;
+  border-radius: 999px;
+  background: #046bec;
+  opacity: 0;
+}
+
+.cursor-pill {
+  z-index: 74;
+  display: grid;
+  place-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-source-sans), sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  white-space: nowrap;
+  mix-blend-mode: difference;
+  opacity: 0;
+}
+
+.cursor-star {
+  z-index: 76;
+  width: 18px;
+  height: 18px;
+  color: #fff;
+  mix-blend-mode: difference;
+}
+
+.cursor-star--shadow {
+  z-index: 75;
+  color: #046bec;
+  mix-blend-mode: normal;
+}
+
+.cursor-star-svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.cursor-layer[data-active="false"] .cursor-star,
+.cursor-layer[data-active="false"] .cursor-dot,
+.cursor-layer[data-active="false"] .cursor-ring,
+.cursor-layer[data-active="false"] .cursor-pill,
+.cursor-layer[data-active="false"] .cursor-pill-shadow,
+.cursor-layer[data-active="false"] .cursor-frame {
+  opacity: 0 !important;
 }

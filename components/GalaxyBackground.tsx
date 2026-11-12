@@ -746,7 +746,7 @@ export default function GalaxyBackground({
       const { x, y } = canvasPoint(event);
       const active = isFooter ? y >= hostH * 0.25 : y <= hostH * 0.85;
       pointer = { x, y, active };
-      if (host) {
+      if (host && !document.documentElement.classList.contains("has-custom-cursor")) {
         const cur = active ? "crosshair" : "";
         if (host.style.cursor !== cur) host.style.cursor = cur;
       }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Alegreya, Source_Sans_3, Poppins } from "next/font/google";
+import CustomCursor from "@/components/CustomCursor";
 import "./globals.css";
 
 const alegreya = Alegreya({
@@ -38,7 +39,10 @@ export default function RootLayout({
       lang="en"
       className={`${alegreya.variable} ${sourceSans.variable} ${poppins.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <CustomCursor />
+      </body>
     </html>
   );
 }

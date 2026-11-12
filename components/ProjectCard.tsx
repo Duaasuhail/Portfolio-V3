@@ -33,7 +33,7 @@ export default function ProjectCard({
 
 export function FeltCard() {
   return (
-    <Link href="/felt" className="block transition-opacity hover:opacity-80">
+    <Link href="/felt" data-cursor="view" className="block transition-opacity hover:opacity-80">
       <ProjectCard
         title="Figbuild 2026 - Felt."
         tags="Product Design | Designathon | Award Winning"
@@ -78,7 +78,7 @@ export function CtrlvoxCard() {
 
 export function DsaCard() {
   return (
-    <Link href="/work/dsa-branding" className="block transition-opacity hover:opacity-80">
+    <Link href="/work/dsa-branding" data-cursor="view" className="block transition-opacity hover:opacity-80">
       <ProjectCard
         title="DSA 2026-2027 Branding"
         tags="Brand Strategy | System Thinking | Shipped"

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import InterestsCarousel from "@/components/InterestsCarousel";
 import SiteFooter from "@/components/SiteFooter";
+import SiteNav from "@/components/SiteNav";
 
 export const metadata: Metadata = {
   title: "About - Duaa Suhail",
@@ -50,6 +50,20 @@ const extras = [
   },
 ] as const;
 
+const awards = [
+  {
+    name: "RGD 2026 Student Awards",
+    year: "2026",
+    detail:
+      "Won first place in UX Design from Canada’s largest student design award program for Felt., a 72-hour designathon project created with Richard Lau (awarded $1,000 sponsored by Context Creative).",
+  },
+  {
+    name: "UX Laurier Designathon",
+    detail:
+      "Nominated for Best Research (2025), Honourable Mention for Best Pitch (2024).",
+  },
+] as const;
+
 function ExperienceColumn({
   label,
   groups,
@@ -83,23 +97,7 @@ function ExperienceColumn({
 export default function AboutPage() {
   return (
     <div className="about-page">
-      <header className="about-nav page-shell">
-        <Link href="/" className="text-nav whitespace-nowrap">
-          Duaa Suhail
-        </Link>
-        <nav className="flex items-center gap-12">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-nav whitespace-nowrap transition-opacity hover:opacity-70"
-              aria-current={link.href === "/about" ? "page" : undefined}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
+      <SiteNav links={navLinks} currentHref="/about" />
 
       <div className="about-body">
         <div className="about-stack">
@@ -146,6 +144,23 @@ export default function AboutPage() {
                 <ExperienceColumn label="Work" groups={work} />
                 <ExperienceColumn label="Extras" groups={extras} />
               </div>
+            </section>
+
+            <section className="about-awards" aria-labelledby="awards-heading">
+              <h2 id="awards-heading" className="about-section-title">
+                Awards
+              </h2>
+              {awards.map((award) => (
+                <div className="about-award" key={award.name}>
+                  <div className="about-award-head">
+                    <p className="about-award-name">{award.name}</p>
+                    {"year" in award ? (
+                      <p className="about-award-year">{award.year}</p>
+                    ) : null}
+                  </div>
+                  <p className="about-award-detail">{award.detail}</p>
+                </div>
+              ))}
             </section>
           </div>
 
