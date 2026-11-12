@@ -17,8 +17,7 @@ const BAYER_8 = [
   [51, 19, 59, 27, 49, 17, 57, 25],
   [15, 47,  7, 39, 13, 45,  5, 37],
   [63, 31, 55, 23, 61, 29, 53, 21],
-];
-
+]
 const BITMAP_BLOCK_SIZE = 4;
 export const SKY_HEIGHT_VH = 1.4;
 export const FOOTER_SKY_VH = 1.15;

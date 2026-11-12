@@ -3,7 +3,6 @@ import SkyShape from "./SkyShape";
 
 const navLinks = [
   { label: "Work", href: "#work" },
-  { label: "Gaming", href: "#gaming" },
   { label: "About", href: "/about" },
 ];
 
