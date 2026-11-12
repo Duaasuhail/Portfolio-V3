@@ -146,6 +146,7 @@ export default function SkyShape({
     let raf = 0;
     let last = performance.now();
     let lastPaint = 0;
+    let lastMesh = 0;
     let t = 0;
     let visible = true;
     let pageVisible = document.visibilityState === "visible";
@@ -241,7 +242,11 @@ export default function SkyShape({
       if (now - lastPaint < minInterval) return;
       lastPaint = now;
 
-      drawMesh(t);
+      // Mesh drifts slowly and sits under a heavy CSS blur: ~12fps is plenty
+      if (now - lastMesh >= 80) {
+        lastMesh = now;
+        drawMesh(t);
+      }
       drawStars(t, delta);
     };
 
@@ -263,6 +268,8 @@ export default function SkyShape({
         : null;
     io?.observe(container);
 
+    drawMesh(0);
+    drawStars(0, 0);
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
@@ -279,6 +286,7 @@ export default function SkyShape({
         isFooter ? "rotate-180" : ""
       }`}
       style={{
+        backgroundColor: "var(--sky-deep, rgb(0, 0, 22))",
         maskImage:
           "linear-gradient(180deg, black 0%, black 50%, rgba(0,0,0,0.6) 75%, transparent 95%)",
         WebkitMaskImage:
