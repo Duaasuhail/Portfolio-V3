@@ -141,6 +141,17 @@ body {
   pointer-events: none;
 }
 
+.site-footer-headline {
+  font-family: var(--font-alegreya), serif;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.96px;
+  color: #ffffff;
+  margin: 0 0 24px;
+  width: 100%;
+}
+
 .site-footer-main {
   display: flex;
   align-items: flex-start;
@@ -150,16 +161,6 @@ body {
   margin-bottom: clamp(80px, 18vh, 200px);
 }
 
-.site-footer-headline {
-  font-family: var(--font-alegreya), serif;
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.96px;
-  color: #ffffff;
-  margin: 0 0 24px;
-}
-
 .site-footer-links {
   list-style: none;
   margin: 0;
@@ -167,6 +168,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 13px;
+}
+
+.site-footer-links li {
+  margin: 0;
+  padding: 0;
+  line-height: 18px; /* Matches anchor line-height so row heights stay locked */
 }
 
 .site-footer-links a {
@@ -183,6 +190,11 @@ body {
 
 .site-footer-links a:hover {
   opacity: 0.7;
+}
+
+.site-footer-col--left {
+  text-align: left;
+  align-items: flex-start;
 }
 
 .site-footer-col--right {
@@ -219,6 +231,7 @@ body {
     padding-top: 36vh;
   }
 }
+
 /* 1. Base Gradient Canvas */
 .sky-layer--base {
   background: linear-gradient(
@@ -734,7 +747,7 @@ html[data-sky-quality="low"] .sky-layer--flare {
   font-family: var(--font-alegreya), serif;
   font-size: 24px;
   font-weight: 500;
-  line-height: 1;
+  line-height: 32px;
   letter-spacing: 0;
   color: var(--greyscale-950);
 }
@@ -903,6 +916,7 @@ html[data-sky-quality="low"] .sky-layer--flare {
   width: 100%;
 }
 
+
 .case-study-photo {
   display: flex;
   flex-direction: column;
@@ -970,7 +984,7 @@ html[data-sky-quality="low"] .sky-layer--flare {
 }
 
 .case-study-thinking-copy .case-study-copy {
-  max-width: 1365px;
+  max-width: none;
 }
 
 .case-study-visual {
@@ -1408,7 +1422,7 @@ html[data-sky-quality="low"] .sky-layer--flare {
 }
 
 .felt-pullquote {
-  width: min(1368px, calc(100% - (var(--page-gutter) * 2)));
+  width: calc(100% - (var(--page-gutter) * 2));
   margin: 0 auto;
   padding-block: 172px;
   font-family: var(--font-alegreya), serif;
@@ -1416,11 +1430,8 @@ html[data-sky-quality="low"] .sky-layer--flare {
   font-weight: 500;
   line-height: normal;
   text-align: center;
+  text-wrap: balance;
   color: #000000;
-}
-
-.felt-pullquote:not(.felt-pullquote--narrow) {
-  white-space: nowrap;
 }
 
 .felt-pullquote--narrow {
@@ -1440,33 +1451,41 @@ html[data-sky-quality="low"] .sky-layer--flare {
   position: relative;
   width: 100%;
   aspect-ratio: 1512 / 965;
-  view-timeline-name: --felt-survey;
-  view-timeline-axis: block;
-}
-
-@keyframes felt-quote-rise {
-  from {
-    opacity: 0;
-    translate: 0 72px;
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
 }
 
 .felt-quote {
   position: absolute;
   overflow: hidden;
-  animation: felt-quote-rise cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-timeline: --felt-survey;
-  animation-range: entry 0% entry 100%;
 }
 
+/* Hidden state (armed by JS via data-ready so quotes never get stuck invisible).
+   Quotes wait 120px below their final spot. */
+.felt-quotes[data-ready="1"] .felt-quote {
+  opacity: 0;
+  translate: 0 120px;
+  /* slide OUT: back down, quicker than the slide in */
+  transition:
+    opacity 500ms ease-in calc(var(--delay, 0ms) * 0.3),
+    translate 900ms cubic-bezier(0.55, 0, 0.7, 0.2) calc(var(--delay, 0ms) * 0.3);
+  will-change: opacity, translate;
+}
+
+/* Section on screen: slide IN from the bottom, slow enough to read,
+   each quote after its own scattered delay */
+.felt-quotes[data-ready="1"][data-in="1"] .felt-quote {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 1000ms ease-out var(--delay, 0ms),
+    translate 1700ms cubic-bezier(0.25, 0.46, 0.45, 0.94) var(--delay, 0ms);
+}
+
+/* Reduced motion: keep a soft fade, drop the movement */
 @media (prefers-reduced-motion: reduce) {
-  .felt-quote {
-    animation: none;
+  .felt-quotes[data-ready="1"] .felt-quote,
+  .felt-quotes[data-ready="1"][data-in="1"] .felt-quote {
+    translate: 0 0;
+    transition-duration: 600ms;
   }
 }
 
@@ -1678,7 +1697,7 @@ html[data-sky-quality="low"] .sky-layer--flare {
 
   .case-study-h1 {
     font-size: 24px;
-    line-height: 30px;
+    line-height: 35px;
     letter-spacing: 0.96px;
   }
 

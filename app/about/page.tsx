@@ -4,7 +4,7 @@ import InterestsCarousel from "@/components/InterestsCarousel";
 import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "About — Duaa Suhail",
+  title: "About - Duaa Suhail",
   description:
     "Product designer in her final year at York University, designing with the mindset that small decisions make the biggest difference.",
 };

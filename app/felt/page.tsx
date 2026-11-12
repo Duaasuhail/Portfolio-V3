@@ -2,9 +2,10 @@ import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import FeltSurveyResponses from "@/components/FeltSurveyResponses";
+import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "felt. — Duaa Suhail",
+  title: "felt. -Duaa Suhail",
   description:
     "Turning invisible, subjective menstrual pain into objective, undeniable data to close communication gaps in healthcare.",
 };
@@ -79,7 +80,7 @@ const solutionCards = [
     body: "When an acute pain flare-up strikes in the middle of a class, meeting, or commute, pulling out a phone to open an app and complete a questionnaire is disruptive and socially uncomfortable.",
   },
   {
-    title: "Empowering + Bold",
+    title: "Tracking made Accessible",
     body: "Syncs with the patch via Bluetooth to translate raw physiological signals into an objective pain score, human metaphors, 3D anatomical maps, and exportable medical reports.",
   },
 ] as const;
@@ -752,7 +753,9 @@ export default function FeltPage() {
             solutions we wouldn’t have arrived at otherwise.
           </p>
         </section>
+        
       </main>
-    </div>
+    <SiteFooter />
+    </div> 
   );
 }

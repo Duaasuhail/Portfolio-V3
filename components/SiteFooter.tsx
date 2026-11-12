@@ -4,15 +4,13 @@ import SkyShape from "./SkyShape";
 const contactLinks = [
   { label: "LinkedIn", href: "https://www.linkedin.com/" },
   { label: "Email", href: "mailto:hello@duaasuhail.com" },
-  { label: "Resume", href: "/resume.pdf" },
+  { label: "Resume", href: "https://drive.google.com/file/d/1N0bpc18Pklr1DasmNaNBsTg3oyN3-Ix4/view?usp=sharing" },
 ] as const;
 
 const pageLinks = [
   { label: "Work", href: "/#work" },
   { label: "About", href: "/about" },
-  { label: "Philosophy", href: "/#philosophy" },
-  { label: "Gaming", href: "/#gaming" },
-  { label: "Archive", href: "/#archive" },
+  { label: "Philosophy (Coming Soon)", href: "#work" },
 ] as const;
 
 /**
@@ -26,17 +24,16 @@ export default function SiteFooter() {
       <GalaxyBackground variant="footer" />
 
       <div className="site-footer-content page-shell">
+        <p className="site-footer-headline">Let’s make big things happen</p>
+
         <div className="site-footer-main">
-          <div className="site-footer-col site-footer-col--left">
-            <p className="site-footer-headline">Let’s make big things happen</p>
-            <ul className="site-footer-links">
-              {contactLinks.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href}>{link.label}</a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul className="site-footer-links site-footer-col site-footer-col--left">
+            {contactLinks.map((link) => (
+              <li key={link.label}>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
 
           <ul className="site-footer-links site-footer-col site-footer-col--right">
             {pageLinks.map((link) => (
@@ -45,12 +42,6 @@ export default function SiteFooter() {
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="site-footer-credits">
-          <p>Inspired by the 100s of hours on Mario Galaxy 1 &amp; 2</p>
-          <p>Built with Next.js and a couple of Ice Capps</p>
-          <p>Duaa Suhail 2026</p>
         </div>
       </div>
     </footer>

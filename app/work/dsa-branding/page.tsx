@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "DSA 26/27 Branding — Duaa Suhail",
+  title: "DSA 26/27 Branding - Duaa Suhail",
   description:
     "A one-week visual identity, narrative, and design system for York University’s Design Students’ Association.",
 };
@@ -601,6 +602,7 @@ export default function DsaBrandingCaseStudy() {
           </div>
         </section>
       </main>
+    <SiteFooter />
     </div>
   );
 }

@@ -58,7 +58,6 @@ export default function Hero() {
             <p>Draw your own constellations.</p>
           </div>
           <p className="text-body max-w-[248px] text-right">
-            Learn more about my design philosophy
           </p>
         </footer>
       </div>
